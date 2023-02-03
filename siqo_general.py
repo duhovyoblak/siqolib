@@ -5,6 +5,7 @@ import pandas        as pd
 import os
 import pickle
 import json
+import base64
 
 #==============================================================================
 # package's constants
@@ -16,104 +17,51 @@ import json
 
 
 #==============================================================================
-# Structure's methods
-#------------------------------------------------------------------------------
-def deepCopy(src):
-    "Make deep copy of the source"
-    
-    #--------------------------------------------------------------------------
-    # Source is list
-    #--------------------------------------------------------------------------
-    if   type(src) == list: 
-        
-        toRet = list()
-        for val in src: toRet.append(deepCopy(val))
-        
-    #--------------------------------------------------------------------------
-    # Source is dictionary
-    #--------------------------------------------------------------------------
-    elif type(src) == dict: 
-        
-        toRet = dict()
-        for key, val in src.items(): toRet[key] = deepCopy(val)
-    
-    #--------------------------------------------------------------------------
-    # Source is set
-    #--------------------------------------------------------------------------
-    elif type(src) == set: 
-        
-        toRet = set()
-        for val in src: toRet.add(deepCopy(val))
-        
-    #--------------------------------------------------------------------------
-    # Source is custom object
-    #--------------------------------------------------------------------------
-
-    #--------------------------------------------------------------------------
-    # Source is primitive object
-    #--------------------------------------------------------------------------
-    else: toRet = src
-    
-    #--------------------------------------------------------------------------
-    return toRet
-    
-#------------------------------------------------------------------------------
-def deepLen(src):
-    "Returns deep length of the source"
-    
-    toRet = 0
-    
-    #--------------------------------------------------------------------------
-    # Source is list
-    #--------------------------------------------------------------------------
-    if   type(src) == list: 
-        
-        for val in src: toRet += deepLen(val)
-        
-    #--------------------------------------------------------------------------
-    # Source is dictionary
-    #--------------------------------------------------------------------------
-    elif type(src) == dict: 
-        
-        for val in src.values(): toRet += deepLen(val)
-    
-    #--------------------------------------------------------------------------
-    # Source is set
-    #--------------------------------------------------------------------------
-    elif type(src) == set: 
-        
-        for val in src: toRet += deepLen(val)
-        
-    #--------------------------------------------------------------------------
-    # Source is custom object
-    #--------------------------------------------------------------------------
-
-    #--------------------------------------------------------------------------
-    # Source is primitive object
-    #--------------------------------------------------------------------------
-    else: toRet = 1
-    
-    #--------------------------------------------------------------------------
-    return toRet
-    
-#==============================================================================
-# Math's methods
-#------------------------------------------------------------------------------
-def binStr(i):
-    "Returns binary representation of an integer as string of 0/1"
-    
-    return bin(i)[2:]
-    
-#==============================================================================
 # Persistency
 #------------------------------------------------------------------------------
-def loadJson(journal, fileName):
+def lines2str(lines, delim='\n'):
+    
+    toRet = ''
+
+    for line in lines:
+        toRet = toRet + line + delim
+        
+    return toRet
+    
+#------------------------------------------------------------------------------
+def loadFile(journal, fileName):
+    
+    toRet = []
+    
+    if os.path.exists(fileName): 
+        
+        with open(fileName) as file:
+            toRet = [line.replace('\n', '') for line in file]
+
+        journal.M(f'SIQO.loadFile: From {fileName} was loaded {len(toRet)} lines')
+        
+    else: journal.M(f'SIQO.loadFile: ERROR File {fileName} does not exist', True)
+    
+    return toRet
+
+#------------------------------------------------------------------------------
+def saveFile(journal, fileName, lines):
+    
+    with open(fileName, 'w') as file:
+
+        for line in lines:
+            file.write(line)
+
+    journal.M(f'SIQO.saveFile: File {fileName} was saved')
+        
+#------------------------------------------------------------------------------
+def loadJson(journal, fileName, enc='utf-8'):
     
     toret = None
     
     if os.path.exists(fileName): 
         
-        with open(fileName) as file:
+        with open(fileName, encoding=enc) as file:
             toret = json.load(file)
             
         journal.M('SIQO.loadJson: From {} was loaded {} entries'.format(fileName, len(toret)))
@@ -123,10 +71,10 @@ def loadJson(journal, fileName):
     return toret
 
 #------------------------------------------------------------------------------
-def dumpJson(journal, fileName, data):
+def dumpJson(journal, fileName, data, enc='utf-8'):
     
     try:
-        file = open(fileName, "w")
+        file = open(fileName, "w", encoding=enc)
         json.dump(data, file, indent = 6)
         file.close()    
 
@@ -162,11 +110,67 @@ def unPicObj(journal, fileName):
     journal.M('SIQO.unPicObj: {} loaded'.format(fileName))
     return obj
 
+#==============================================================================
+# Tools
+#------------------------------------------------------------------------------
+def dictLen(dct, left=99):
+    "Returns len of immersed dictionaries"
     
+    toRet = 0
+    
+    for val in dct.values():
+        
+        if (type(val) in {dict, list}) and (left>0): toRet += dictLen(val, left-1)
+        else                                       : toRet += 1
+            
+    return toRet
+
+#------------------------------------------------------------------------------
+def dictSort(dct, sortKey=(1,), reverse=False):
+    "Returns sorted dictionary"
+    
+    toRet = dct
+    
+    try:
+        if len(sortKey) == 1: 
+            toRet = dict( sorted(dct.items(), key=lambda item: item[sortKey[0]], reverse=reverse) )
+    
+        else:
+            toRet = dict( sorted(dct.items(), key=lambda item: item[sortKey[0]][sortKey[1]], reverse=reverse) )
+            
+    finally:
+        return toRet
+
+#------------------------------------------------------------------------------
+def b64enc(s):
+
+    return base64.b64encode(s.encode("ascii")).decode('ascii')
+    
+#------------------------------------------------------------------------------
+def b64dec(s):
+    
+    return base64.b64decode(s.encode('ascii')).decode('ascii')
+    
+#------------------------------------------------------------------------------
+def getPasw(journal, con, user):
+    
+    journal.I(f"SIQO.getPasw: '{con}', '{user}'")
+    
+    envKey   = f'PWD_{con.upper()}_{user.upper()}'
+    b64_pasw = os.environ.get(envKey, None)
+    
+    if b64_pasw is None:
+        journal.M(f"SIQO.getPasw: WARNING - Password for '{envKey}' does not exist", True)
+        journal.O()
+        return None
+    
+    journal.O()
+    return b64dec(b64_pasw)
+
 #==============================================================================
 #   Inicializacia kniznice
 #------------------------------------------------------------------------------
-print('SIQO general library ver 1.05')
+print('SIQO general library ver 1.08')
 
 #==============================================================================
 #                              END OF FILE

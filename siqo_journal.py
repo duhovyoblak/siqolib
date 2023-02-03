@@ -1,5 +1,5 @@
 #==============================================================================
-# Siqo common library: Journal
+# Siqo common library
 #------------------------------------------------------------------------------
 from   datetime import date, datetime
 import pytz
@@ -29,15 +29,15 @@ class SiqoJournal:
     #==========================================================================
     # Constructor & utilities
     #--------------------------------------------------------------------------
-    def __init__(self, name, debug=3, verbose=False):
+    def __init__(self, name, debug=3, verbose=False, fileOnly=False):
         "Call constructor of SiqoJournal and initialise it with empty data"
         
         self.name       = name          # Nazov journalu
         self.user       = ''            # Nazov usera, ktory pouziva journal
         self.debugLevel = debug         # Pocet vnoreni, ktore sa vypisu do journalu
+        self.fileOnly   = fileOnly      # Ci sa bude zapisovat IBA do suboru
         
         self.indent     = _INDENT_START # Aktualne vnorenie
-        self.fileOnly   = False         # Ci sa bude zapisovat IBA do suboru
         self.showAll    = False         # Overrride debugLevel. Ak True, bude sa vypisovat VSETKO
         self.out        = []            # Zoznam vypisanych riadkov, pre zapis na disk
         
@@ -149,20 +149,44 @@ class SiqoJournal:
         for mess in self.out[a:b]: print(mess)
         
     #--------------------------------------------------------------------------
-    def dumpOut(self):
+    def dumpOut(self, enc='utf-8'):
         "Zapise journal na koniec suboru <fileName> a vycisti pamat <out>"
         
         if len(self.out)>0:
 
             fileName = '{}.journal'.format(self.name)
 
-            file = open(fileName, "a", encoding='utf-8')
+            file = open(fileName, "a", encoding=enc)
             for mess in self.out: file.writelines([mess, '\n'])
             file.close()   
         
             self.out.clear()
 
         # self.M('Journal dumped to {}'.format(fileName))
+        
+    #--------------------------------------------------------------------------
+    def getFromFile(self, maxLines=100, enc='utf-8'):
+        "Nacita z disku journal a vrati ho"
+        
+        toRet = []
+        fileName = '{}.journal'.format(self.name)
+        
+        #----------------------------------------------------------------------
+        # Ak subor existuje, nacitam ho
+        #----------------------------------------------------------------------
+        if os.path.exists(fileName): 
+            
+            # Nacitam cely subor
+            with open(fileName, "rt", encoding=enc) as file:
+                for line in file:
+                    toRet.append(line.strip())
+
+        #----------------------------------------------------------------------
+        # Reversnem poradie a vratim prvych maxLinesriadkov
+        #----------------------------------------------------------------------
+#        toRet.reverse()
+        
+        return toRet[-maxLines:]
         
     #--------------------------------------------------------------------------
     def removeFile(self):
@@ -173,12 +197,11 @@ class SiqoJournal:
         if os.path.exists(fileName): os.remove(fileName)
             
     #--------------------------------------------------------------------------
-    def reset(self, name=None, user=None, fileOnly=False):
+    def reset(self, name=None, user=None):
         "Resetne parametre journalu na default hodnoty"
 
-        if name     is not None: self.name       = name
-        if user     is not None: self.user       = user
-        if fileOnly is not None: self.fileOnly   = fileOnly
+        if name is not None: self.name = name
+        if user is not None: self.user = user
         
         self.indent     = 1
         self.verbose    = False
@@ -192,14 +215,14 @@ class SiqoJournal:
         self.M('/////////////////////// Journal reset, name={}, debug level={} & fileOnly={} ////////////////// {}'.format(self.name, self.debugLevel, self.fileOnly, date.today().strftime("%A %d.%m.%Y")), True)
         
 #        if self.debugLevel == 0: print("Journal '{}' will be quiet and will produce no output".format(self.name))
-        if self.fileOnly       : print("Journal '{}' will will produce output to file ONLY".format(self.name))
+#        if self.fileOnly       : print("Journal '{}' will will produce output to file ONLY".format(self.name))
 
 #------------------------------------------------------------------------------
 
 #==============================================================================
 # Journal
 #------------------------------------------------------------------------------
-print('Siqo journal ver 1.20')
+print('Siqo journal ver 1.21')
 
 #==============================================================================
 #                              END OF FILE
