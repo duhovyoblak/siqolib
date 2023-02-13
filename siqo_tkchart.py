@@ -4,8 +4,6 @@
 import sys
 sys.path.append('..\siqo_lib')
 
-from   siqo_journal        import SiqoJournal
-
 import tkinter                as tk
 from   tkinter                import (ttk, font, PanedWindow)
 
@@ -41,55 +39,75 @@ class SiqoChart(FigureCanvasTkAgg):
     def __init__(self, journal, name, container, **kwargs):
         "Call constructor of SiqoChart and initialise it"
 
+        journal.I(f'{name}.init:')
+        
         self.journal = journal
         self.name    = name
-        self.journal.I(f'{self.name}.init:')
-        self.w = 400
-        self.h = 200
-        
-        self.fig = plt.figure(figsize=(self.w*_FIG_W/100, self.h*_FIG_H/100), dpi=_DPI)
+        self.dat     = None
+        self.typ     = 'quiver'  # Type of axis ['quiver','2D','3D']
 
         #----------------------------------------------------------------------
-        # Initialise original tkInter.Tk
+        # Initialise original FigureCanvasTkAgg
         #----------------------------------------------------------------------
+        self.w       = container.winfo_width()
+        self.h       = container.winfo_height()
+        self.fig     = plt.figure(figsize=(self.w*_FIG_W/100, self.h*_FIG_H/100), dpi=_DPI)
+
         super().__init__(self.fig, master=container)
 
-        self.navBar = NavigationToolbar2Tk(self, container)
-
-        self.get_tk_widget().place(x=self.w*0.0, y=self.h*0.0)
+        self.get_tk_widget().place(x=0, y=0)
+        self.fig.canvas.callbacks.connect('button_press_event', self.on_click)
         
-
+        #----------------------------------------------------------------------
+        # Initialise navigation bar for a figure
+        #----------------------------------------------------------------------
+        self.navBar = NavigationToolbar2Tk(self, container)
+        
         #----------------------------------------------------------------------
         # Internal objects
         #----------------------------------------------------------------------
         self.clear()
-        
         self.show()
 
-
-        #----------------------------------------------------------------------
-        # Bind events on this TreeView to respective methods
-        #----------------------------------------------------------------------
-        self.fig.canvas.callbacks.connect('button_press_event', self.on_click)
 
         self.journal.O()
 
     #--------------------------------------------------------------------------
     def clear(self):
+        "Clear and destroy all data"
         
         pass
     
     #==========================================================================
+    # API
+    #--------------------------------------------------------------------------
+    def setData(self, dat):
+        "Clears data and set new data"
+        
+        self.clear()
+        self.dat = dat
+
+    #--------------------------------------------------------------------------
+    def setType(self, typ):
+        "Set type of the axis"
+        
+        self.journal.I(f'{self.name}.setType: type = {typ}')
+
+        self.typ = typ
+
+        self.journal.O()
+        
+    #==========================================================================
     # Show the chart
     #--------------------------------------------------------------------------
     def show(self):
+        "Shows chart of the data for respective axis type"
+        
+        self.journal.I(f'{self.name}.show: type = {self.typ}')
         
         
         
-        pass
-#        self.draw()
-        
-        
+        self.journal.O()
         
     #--------------------------------------------------------------------------
     def on_click(self, event):
@@ -106,10 +124,7 @@ class SiqoChart(FigureCanvasTkAgg):
             
         else:
             print('Clicked ouside axes bounds but inside plot window')
-    
-        
-        
-
+            
 #==============================================================================
 #   Inicializacia kniznice
 #------------------------------------------------------------------------------
