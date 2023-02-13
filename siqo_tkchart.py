@@ -33,7 +33,7 @@ _FIG_H          = 1.0    # Figure height
 #==============================================================================
 # Class SiqoChart
 #------------------------------------------------------------------------------
-class SiqoChart(FigureCanvasTkAgg):
+class SiqoChart(ttk.Frame):
     
     #==========================================================================
     # Constructor & utilities
@@ -46,22 +46,34 @@ class SiqoChart(FigureCanvasTkAgg):
         self.journal = journal
         self.name    = name
         self.dat     = None
-        self.w       = 600
-        self.h       = 400
+        self.w       = 1200
+        self.h       =  800
         
-        self.fig = plt.figure(figsize=(self.w*_FIG_W/100, self.h*_FIG_H/100), dpi=_DPI)
 
         #----------------------------------------------------------------------
         # Initialise original tkInter.Tk
         #----------------------------------------------------------------------
-        super().__init__(self.fig, master=container)
+        super().__init__(container)
 
-        self.navBar = NavigationToolbar2Tk(self, container)
-        self.get_tk_widget().place(x=self.w*0.0, y=self.h*0.0)
+        # create a figure
+        self.figure = plt.figure(figsize=(self.w*_FIG_W/100, self.h*_FIG_H/100), dpi=_DPI)
+
+
+        # create FigureCanvasTkAgg object
+        self.canvas = FigureCanvasTkAgg(self.figure, self)
+
+        # create the toolbar
+        NavigationToolbar2Tk(self.canvas, self)
+
+        self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+       
+        # create axes
+        self.chart = self.figure.add_subplot()
+
+
         
 
-        self.chart = self.fig.add_subplot()
-        self.chart.set_title("Left", fontsize=14)
+        self.chart.set_title(self.name, fontsize=14)
         self.chart.grid(False)
         self.chart.set_facecolor('yellow')
         self.chart.set_xlabel( 'X0' )
@@ -78,7 +90,7 @@ class SiqoChart(FigureCanvasTkAgg):
         #----------------------------------------------------------------------
         # Bind events on this TreeView to respective methods
         #----------------------------------------------------------------------
-        self.fig.canvas.callbacks.connect('button_press_event', self.on_click)
+        self.canvas.callbacks.connect('button_press_event', self.on_click)
 
         self.journal.O()
 
@@ -111,13 +123,13 @@ class SiqoChart(FigureCanvasTkAgg):
         
         sctrObj = self.chart.scatter( x=X, y=Y, c=C )
 #        sctrObj = self.chart.scatter( x=dat['x1'], y=dat['x2'], c=dat['re'], marker="s", lw=0, s=(72./self.fig.dpi)**2, cmap='RdYlBu_r')
-        self.fig.colorbar(sctrObj, ax=self.chart)
+        self.figure.colorbar(sctrObj, ax=self.chart)
             
 
         # Vykreslenie noveho grafu
-        self.fig.tight_layout()
-#        self.update()
-        self.draw()
+        self.figure.tight_layout()
+        self.update()
+        self.canvas.draw()
         
         self.journal.O()
         
