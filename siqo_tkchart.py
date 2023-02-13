@@ -4,6 +4,8 @@
 import sys
 sys.path.append('..\siqo_lib')
 
+from   siqo_journal        import SiqoJournal
+
 import tkinter                as tk
 from   tkinter                import (ttk, font, PanedWindow)
 
@@ -40,74 +42,85 @@ class SiqoChart(FigureCanvasTkAgg):
         "Call constructor of SiqoChart and initialise it"
 
         journal.I(f'{name}.init:')
-        
+
         self.journal = journal
         self.name    = name
         self.dat     = None
-        self.typ     = 'quiver'  # Type of axis ['quiver','2D','3D']
+        self.w       = 600
+        self.h       = 400
+        
+        self.fig = plt.figure(figsize=(self.w*_FIG_W/100, self.h*_FIG_H/100), dpi=_DPI)
 
         #----------------------------------------------------------------------
-        # Initialise original FigureCanvasTkAgg
+        # Initialise original tkInter.Tk
         #----------------------------------------------------------------------
-        self.w       = container.winfo_width()
-        self.h       = container.winfo_height()
-        self.fig     = plt.figure(figsize=(self.w*_FIG_W/100, self.h*_FIG_H/100), dpi=_DPI)
-
         super().__init__(self.fig, master=container)
 
-        self.get_tk_widget().place(x=0, y=0)
-        self.fig.canvas.callbacks.connect('button_press_event', self.on_click)
-        
-        #----------------------------------------------------------------------
-        # Initialise navigation bar for a figure
-        #----------------------------------------------------------------------
         self.navBar = NavigationToolbar2Tk(self, container)
+        self.get_tk_widget().place(x=self.w*0.0, y=self.h*0.0)
         
+
+        self.chart = self.fig.add_subplot()
+        self.chart.set_title("Left", fontsize=14)
+        self.chart.grid(False)
+        self.chart.set_facecolor('yellow')
+        self.chart.set_xlabel( 'X0' )
+        self.chart.set_ylabel( 'X1')
+
+
+
         #----------------------------------------------------------------------
         # Internal objects
         #----------------------------------------------------------------------
         self.clear()
-        self.show()
+        
 
+        #----------------------------------------------------------------------
+        # Bind events on this TreeView to respective methods
+        #----------------------------------------------------------------------
+        self.fig.canvas.callbacks.connect('button_press_event', self.on_click)
 
         self.journal.O()
 
     #--------------------------------------------------------------------------
     def clear(self):
-        "Clear and destroy all data"
         
         pass
     
-    #==========================================================================
-    # API
     #--------------------------------------------------------------------------
     def setData(self, dat):
         "Clears data and set new data"
         
-        self.clear()
         self.dat = dat
-
-    #--------------------------------------------------------------------------
-    def setType(self, typ):
-        "Set type of the axis"
-        
-        self.journal.I(f'{self.name}.setType: type = {typ}')
-
-        self.typ = typ
-
-        self.journal.O()
         
     #==========================================================================
     # Show the chart
     #--------------------------------------------------------------------------
     def show(self):
-        "Shows chart of the data for respective axis type"
+
+        self.journal.I(f'{self.name}.show:')
         
-        self.journal.I(f'{self.name}.show: type = {self.typ}')
+        dat = self.dat.getData()
+        X = dat['x1']
+        Y = dat['x2']
+        C = dat['re']
+
+        print(X)
+        print(Y)
+        print(C)
         
-        
+        sctrObj = self.chart.scatter( x=X, y=Y, c=C )
+#        sctrObj = self.chart.scatter( x=dat['x1'], y=dat['x2'], c=dat['re'], marker="s", lw=0, s=(72./self.fig.dpi)**2, cmap='RdYlBu_r')
+        self.fig.colorbar(sctrObj, ax=self.chart)
+            
+
+        # Vykreslenie noveho grafu
+        self.fig.tight_layout()
+#        self.update()
+        self.draw()
         
         self.journal.O()
+        
         
     #--------------------------------------------------------------------------
     def on_click(self, event):
@@ -124,7 +137,38 @@ class SiqoChart(FigureCanvasTkAgg):
             
         else:
             print('Clicked ouside axes bounds but inside plot window')
-            
+    
+        
+    #==========================================================================
+    # Tools for figure setting
+    #--------------------------------------------------------------------------
+    def getDataLabel(self, key):
+        "Return data label for given data's key"
+        
+        return "${}$ [{}{}]".format(key, self.meta[key]['unit'], 
+                                         self.meta[key]['dim' ])
+    
+    #--------------------------------------------------------------------------
+    def getValByGrid(self, gv, key):
+        "Return rescaled value for given grid's value and data's key"
+        
+        gl = self.meta['g'+key]['max'] - self.meta['g'+key]['min']
+        vl = self.meta[    key]['max'] - self.meta[    key]['min']
+        
+        return (gv/gl) * vl * self.meta[key]['coeff']
+    
+    #--------------------------------------------------------------------------
+    def getObjScatter(self):
+        "Returns plotable data for Object value"
+        
+        self.journal.M( f"{self.name}.getObjScatter" )
+
+#        return lib.squareData(baseObj=self.obj, vec=self.obj.prtLst)
+#        return lib.spiralData(baseObj=self.obj, vec=self.obj.prtLst)
+        
+        
+        
+
 #==============================================================================
 #   Inicializacia kniznice
 #------------------------------------------------------------------------------
