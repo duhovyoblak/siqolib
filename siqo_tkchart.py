@@ -53,16 +53,18 @@ class SiqoChart(ttk.Frame):
         self.w       = 1200
         self.h       =  800
         
-        self.strDim = tk.StringVar()
+        self.strVal = tk.StringVar()
+        self.strX   = tk.StringVar()
+        self.strY   = tk.StringVar()
         
-        if 'dim' in kwargs.keys(): self.strDim.set(kwargs['dim'])
-        else                     : self.strDim.set('1')
+        if 'val' in kwargs.keys(): self.strVal.set(kwargs['val'])
+        else                     : self.strVal.set('re')
 
-        self.strX = tk.StringVar()
-        self.strX.set('1')
+        if 'axX' in kwargs.keys(): self.strX.set(kwargs['axX'])
+        else                     : self.strX.set('0')
 
-        self.strY = tk.StringVar()
-        self.strY.set('1')
+        if 'axY' in kwargs.keys(): self.strY.set(kwargs['axY'])
+        else                     : self.strY.set('1')
 
         #----------------------------------------------------------------------
         # Initialise original tkInter.Tk
@@ -84,43 +86,43 @@ class SiqoChart(ttk.Frame):
         frmBtn.rowconfigure(1, weight=1)
         
         #----------------------------------------------------------------------
-        # Dimension
+        # Value
         #----------------------------------------------------------------------
-        lblDim = ttk.Label(frmBtn, text="Select a dimension:")
-        lblDim.grid(column=0, row=0, sticky=tk.W, padx=_PADX, pady=_PADY)
+        lblVal = ttk.Label(frmBtn, text="Value to show:")
+        lblVal.grid(column=0, row=0, sticky=tk.W, padx=_PADX, pady=_PADY)
 
-        self.cbDim = ttk.Combobox(frmBtn, textvariable=self.strDim)
-        self.cbDim['values'] = [1, 2]
-        self.cbDim['state' ] = 'readonly'
-        self.cbDim.bind('<<ComboboxSelected>>', self.dimChanged)
-        self.cbDim.grid(column=0, row=1, sticky=tk.W, padx=_PADX, pady=_PADY)
+        self.cbVal = ttk.Combobox(frmBtn, textvariable=self.strVal)
+        self.cbVal['values'] = ['re', 'im', 'abs']
+        self.cbVal['state' ] = 'readonly'
+        self.cbVal.bind('<<ComboboxSelected>>', self.chartChanged)
+        self.cbVal.grid(column=0, row=1, sticky=tk.W, padx=_PADX, pady=_PADY)
         
         #----------------------------------------------------------------------
         # X axis
         #----------------------------------------------------------------------
-        lblX = ttk.Label(frmBtn, text="X axis will show:")
+        lblX = ttk.Label(frmBtn, text="Dim for X axis:")
         lblX.grid(column=1, row=0, sticky=tk.W, padx=_PADX, pady=_PADY)
 
         self.cbX = ttk.Combobox(frmBtn, textvariable=self.strX)
-        self.cbX['values'] = [1, 2]
+        self.cbX['values'] = ['0', '1', '2', '3']
         self.cbX['state' ] = 'readonly'
-        self.cbX.bind('<<ComboboxSelected>>', self.axisChanged)
+        self.cbX.bind('<<ComboboxSelected>>', self.chartChanged)
         self.cbX.grid(column=1, row=1, sticky=tk.W, padx=_PADX, pady=_PADY)
         
         #----------------------------------------------------------------------
         # Y axis
         #----------------------------------------------------------------------
-        lblY = ttk.Label(frmBtn, text="Y axis will show:")
+        lblY = ttk.Label(frmBtn, text="Dim for Y axis:")
         lblY.grid(column=2, row=0, sticky=tk.W, padx=_PADX, pady=_PADY)
 
         self.cbY = ttk.Combobox(frmBtn, textvariable=self.strY)
-        self.cbY['values'] = [1, 2]
+        self.cbY['values'] = ['0', '1', '2', '3']
         self.cbY['state' ] = 'readonly'
-        self.cbY.bind('<<ComboboxSelected>>', self.axisChanged)
+        self.cbY.bind('<<ComboboxSelected>>', self.chartChanged)
         self.cbY.grid(column=2, row=1, sticky=tk.W, padx=_PADX, pady=_PADY)
         
         #----------------------------------------------------------------------
-        # Create a figure with the navigator bar
+        # Create a figure with the navigator bar and bind to mouse events
         #----------------------------------------------------------------------
         self.figure = plt.figure(figsize=(self.w*_FIG_W/100, self.h*_FIG_H/100), dpi=_DPI)
         self.canvas = FigureCanvasTkAgg(self.figure, self)
@@ -131,36 +133,16 @@ class SiqoChart(ttk.Frame):
         self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
        
         #----------------------------------------------------------------------
-        # create axes
-        #----------------------------------------------------------------------
-        self.chart = self.figure.add_subplot()
-
-        #----------------------------------------------------------------------
         # Internal objects
         #----------------------------------------------------------------------
         self.clear()
         
-        #----------------------------------------------------------------------
-        # Bind events on this TreeView to respective methods
-        #----------------------------------------------------------------------
-
         self.journal.O()
 
     #--------------------------------------------------------------------------
-    def dimChanged(self, event):
+    def chartChanged(self, event):
         
-        showinfo(
-            title='Result',
-            message=f'You selected {self.strDim.get()}!'
-        )
-        
-    #--------------------------------------------------------------------------
-    def axisChanged(self, event):
-        
-        showinfo(
-            title='Result',
-            message=f'You selected {self.strX.get()}!'
-        )
+        self.show()
         
     #--------------------------------------------------------------------------
     def clear(self):
@@ -183,21 +165,33 @@ class SiqoChart(ttk.Frame):
         #----------------------------------------------------------------------
         # Set filter and get data
         #----------------------------------------------------------------------
-        cut = {}
-        cut['dim'] = int(self.strDim.get())
-        cut['axs'] = [int(self.strX.get()), int(self.strY.get())]
-        cut['flt'] = {}
+        axX = int(self.strX.get())
+        axY = int(self.strY.get())
+        val =     self.strVal.get()
+        
+        # Default filter with placeholders for all dimensions
+        cut = [0 for i in range(self.dat.getDimMax())]
+        if axX>0: cut[axX-1] = -1
+        if axY>0: cut[axY-1] = -1
         
         dat = self.dat.getData(cut=cut)
-        X = dat['x1']
-        Y = dat['x2']
-        C = dat['re']
+        X = dat[axX-1]['arr']
+        Y = dat[axY-1]['arr']
+        
+        for arr in dat:
+            if arr['key'] == val: C = arr['arr']
 
-        self.chart.set_title(self.name, fontsize=14)
+        #----------------------------------------------------------------------
+        # Show the data
+        #----------------------------------------------------------------------
+        self.figure.clear() 
+        self.chart = self.figure.add_subplot()
+
+        self.chart.set_title(val, fontsize=14)
         self.chart.grid(False)
-        self.chart.set_facecolor('yellow')
-        self.chart.set_xlabel( 'X0' )
-        self.chart.set_ylabel( 'X1')
+        self.chart.set_facecolor('white')
+        self.chart.set_xlabel(dat[axX-1]['key'])
+        self.chart.set_ylabel(dat[axY-1]['key'])
         sctrObj = self.chart.scatter( x=X, y=Y, c=C )
         
 #        sctrObj = self.chart.scatter( x=dat['x1'], y=dat['x2'], c=dat['re'], marker="s", lw=0, s=(72./self.fig.dpi)**2, cmap='RdYlBu_r')
@@ -205,9 +199,9 @@ class SiqoChart(ttk.Frame):
             
 
         # Vykreslenie noveho grafu
-#        self.figure.tight_layout()
-#        self.update()
-#        self.canvas.draw()
+        self.figure.tight_layout()
+        self.update()
+        self.canvas.draw()
         
         self.journal.O()
         
