@@ -42,14 +42,14 @@ class SiqoChart(ttk.Frame):
     #==========================================================================
     # Constructor & utilities
     #--------------------------------------------------------------------------
-    def __init__(self, journal, name, container, **kwargs):
+    def __init__(self, journal, name, container, dat, **kwargs):
         "Call constructor of SiqoChart and initialise it"
 
         journal.I(f'{name}.init:')
 
         self.journal = journal
         self.name    = name
-        self.dat     = None
+        self.dat     = dat
         self.w       = 1200
         self.h       =  800
         
@@ -70,7 +70,6 @@ class SiqoChart(ttk.Frame):
         # Internal objects
         #----------------------------------------------------------------------
         self.type  = '2D'          # Actual type of the chart
-        
         self.lstCP = []            # List of values (cP)
         
         self.keyX  = ''            # Dimension name for coordinate X
@@ -98,6 +97,7 @@ class SiqoChart(ttk.Frame):
         frmBtn.columnconfigure(1, weight=1)
         frmBtn.columnconfigure(2, weight=1)
         frmBtn.columnconfigure(3, weight=1)
+        frmBtn.columnconfigure(4, weight=1)
         
         frmBtn.rowconfigure(0, weight=1)
         frmBtn.rowconfigure(1, weight=1)
@@ -126,17 +126,29 @@ class SiqoChart(ttk.Frame):
         self.cbX.bind('<<ComboboxSelected>>', self.dataChanged)
         self.cbX.grid(column=1, row=1, sticky=tk.W, padx=_PADX, pady=_PADY)
         
+        
+#        checkbox_var = tk.StringVar()
+
+
+        self.cbLogX = ttk.Checkbutton(frmBtn,
+                text='Log',
+                command=self.show)
+#                variable=checkbox_var,
+#                onvalue='<value_when_checked>',
+#                offvalue='<value_when_unchecked>')
+        self.cbLogX.grid(column=2, row=1, sticky=tk.W, padx=_PADX, pady=_PADY)
+        
         #----------------------------------------------------------------------
         # Y axis
         #----------------------------------------------------------------------
         lblY = ttk.Label(frmBtn, text="Dim for Y axis:")
-        lblY.grid(column=2, row=0, sticky=tk.W, padx=_PADX, pady=_PADY)
+        lblY.grid(column=3, row=0, sticky=tk.W, padx=_PADX, pady=_PADY)
 
         self.cbY = ttk.Combobox(frmBtn, textvariable=self.strY)
         self.cbY['values'] = ['1', '2', '3']
         self.cbY['state' ] = 'readonly'
         self.cbY.bind('<<ComboboxSelected>>', self.dataChanged)
-        self.cbY.grid(column=2, row=1, sticky=tk.W, padx=_PADX, pady=_PADY)
+        self.cbY.grid(column=3, row=1, sticky=tk.W, padx=_PADX, pady=_PADY)
         
         #----------------------------------------------------------------------
         # Create a figure with the navigator bar and bind to mouse events
@@ -150,10 +162,13 @@ class SiqoChart(ttk.Frame):
         self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
         
         #----------------------------------------------------------------------
+        self.dataChanged()
+
+        #----------------------------------------------------------------------
         self.journal.O()
 
     #--------------------------------------------------------------------------
-    def dataChanged(self, event):
+    def dataChanged(self, event=None):
         
         #----------------------------------------------------------------------
         # Read actual settings
@@ -185,25 +200,24 @@ class SiqoChart(ttk.Frame):
         #----------------------------------------------------------------------
         # Assign coordinate arrays
         #----------------------------------------------------------------------
+        self.keyY = dat[axY-1]['key']
+        self.Y    = dat[axY-1]['arr']
+        self.journal.M(f'{self.name}.dataChanged: keyY={self.keyY}')
+        
         if axX > 0:
             self.keyX = dat[axX-1]['key']
             self.X    = dat[axX-1]['arr']
-            self.journal.M(f'{self.name}.dataChanged: keyX={self.keyX}, X={self.X}')
             
         else:
             self.keyX = 'No dimension'
-            self.X    = dat[axX-1]['arr']
-            self.journal.M(f'{self.name}.dataChanged: keyX={self.keyX}, X={self.X}')
-        
-        self.keyY = dat[axY-1]['key']
-        self.Y    = dat[axY-1]['arr']
-        self.journal.M(f'{self.name}.dataChanged: keyY={self.keyY}, Y={self.Y}')
+            self.X    = np.zeros(len(self.Y))
+
+        self.journal.M(f'{self.name}.dataChanged: keyX={self.keyX}')
         
         #----------------------------------------------------------------------
         # Remember values (list of cP) for this dataset
         #----------------------------------------------------------------------
         self.lstCP = dat[-1]['arr']
-        self.journal.M(f'{self.name}.dataChanged: lstCP={self.lstCP}')
         
         self.journal.O()
         self.show()
@@ -222,7 +236,7 @@ class SiqoChart(ttk.Frame):
     #==========================================================================
     # Show the chart
     #--------------------------------------------------------------------------
-    def show(self):
+    def show(self, event=None):
 
         self.journal.I(f'{self.name}.show:')
         
@@ -241,8 +255,6 @@ class SiqoChart(ttk.Frame):
             
         self.C = np.array(arrC)
         
-        print(self.C)
-
         #----------------------------------------------------------------------
         # Show the data
         #----------------------------------------------------------------------
@@ -254,9 +266,13 @@ class SiqoChart(ttk.Frame):
         self.chart.set_facecolor('white')
         self.chart.set_xlabel(self.keyX)
         self.chart.set_ylabel(self.keyY)
-        sctrObj = self.chart.scatter( x=self.X, y=self.Y, c=self.C )
         
-#        sctrObj = self.chart.scatter( x=dat['x1'], y=dat['x2'], c=dat['re'], marker="s", lw=0, s=(72./self.fig.dpi)**2, cmap='RdYlBu_r')
+        if self.cbLogX.state() == 'selected': self.chart.set_xscale('log')
+        
+#        sctrObj = self.chart.scatter( x=self.X, y=self.Y, c=self.C )
+        
+        sctrObj = self.chart.scatter( x=self.X, y=self.Y, c=self.C, marker="s", cmap='RdYlBu_r')
+#        sctrObj = self.chart.scatter( x=self.X, y=self.Y, c=self.C, marker="s", lw=0, s=(72./self.figure.dpi)**2, cmap='RdYlBu_r')
 #        self.figure.colorbar(sctrObj, ax=self.chart)
             
 
