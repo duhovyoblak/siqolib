@@ -108,7 +108,7 @@ class SiqoChart(ttk.Frame):
         lblVal = ttk.Label(frmBtn, text="Value to show:")
         lblVal.grid(column=0, row=0, sticky=tk.W, padx=_PADX, pady=_PADY)
 
-        self.cbVal = ttk.Combobox(frmBtn, textvariable=self.strVal)
+        self.cbVal = ttk.Combobox(frmBtn, textvariable=self.strVal, width=5)
         self.cbVal['values'] = ['re', 'im', 'abs']
         self.cbVal['state' ] = 'readonly'
         self.cbVal.bind('<<ComboboxSelected>>', self.show)
@@ -120,36 +120,31 @@ class SiqoChart(ttk.Frame):
         lblX = ttk.Label(frmBtn, text="Dim for X axis:")
         lblX.grid(column=1, row=0, sticky=tk.W, padx=_PADX, pady=_PADY)
 
-        self.cbX = ttk.Combobox(frmBtn, textvariable=self.strX)
+        self.cbX = ttk.Combobox(frmBtn, textvariable=self.strX, width=5)
         self.cbX['values'] = ['0', '1', '2', '3']
         self.cbX['state' ] = 'readonly'
         self.cbX.bind('<<ComboboxSelected>>', self.dataChanged)
         self.cbX.grid(column=1, row=1, sticky=tk.W, padx=_PADX, pady=_PADY)
         
-        
-#        checkbox_var = tk.StringVar()
-
-
-        self.cbLogX = ttk.Checkbutton(frmBtn,
-                text='Log',
-                command=self.show)
-#                variable=checkbox_var,
-#                onvalue='<value_when_checked>',
-#                offvalue='<value_when_unchecked>')
-        self.cbLogX.grid(column=2, row=1, sticky=tk.W, padx=_PADX, pady=_PADY)
+        self.cbLogX = ttk.Checkbutton(frmBtn, text='LogX', command=self.show)
+        self.cbLogX.grid(column=1, row=1, pady=_PADY)
         
         #----------------------------------------------------------------------
         # Y axis
         #----------------------------------------------------------------------
         lblY = ttk.Label(frmBtn, text="Dim for Y axis:")
-        lblY.grid(column=3, row=0, sticky=tk.W, padx=_PADX, pady=_PADY)
+        lblY.grid(column=2, row=0, sticky=tk.W, padx=_PADX, pady=_PADY)
 
-        self.cbY = ttk.Combobox(frmBtn, textvariable=self.strY)
+        self.cbY = ttk.Combobox(frmBtn, textvariable=self.strY, width=5)
         self.cbY['values'] = ['1', '2', '3']
         self.cbY['state' ] = 'readonly'
         self.cbY.bind('<<ComboboxSelected>>', self.dataChanged)
-        self.cbY.grid(column=3, row=1, sticky=tk.W, padx=_PADX, pady=_PADY)
+        self.cbY.grid(column=2, row=1, sticky=tk.W, padx=_PADX, pady=_PADY)
         
+        
+        self.cbLogY = ttk.Checkbutton(frmBtn, text='LogY', command=self.show)
+        self.cbLogY.grid(column=2, row=1, pady=_PADY)
+
         #----------------------------------------------------------------------
         # Create a figure with the navigator bar and bind to mouse events
         #----------------------------------------------------------------------
@@ -256,7 +251,7 @@ class SiqoChart(ttk.Frame):
         self.C = np.array(arrC)
         
         #----------------------------------------------------------------------
-        # Show the data
+        # Prepre the chart
         #----------------------------------------------------------------------
         self.figure.clear() 
         self.chart = self.figure.add_subplot()
@@ -267,8 +262,15 @@ class SiqoChart(ttk.Frame):
         self.chart.set_xlabel(self.keyX)
         self.chart.set_ylabel(self.keyY)
         
-        if self.cbLogX.state() == 'selected': self.chart.set_xscale('log')
+        #----------------------------------------------------------------------
+        # Log axis X, Y
+        #----------------------------------------------------------------------
+        if 'selected' in self.cbLogX.state(): self.chart.set_xscale('log')
+        if 'selected' in self.cbLogY.state(): self.chart.set_yscale('log')
         
+        #----------------------------------------------------------------------
+        # Show the chart
+        #----------------------------------------------------------------------
 #        sctrObj = self.chart.scatter( x=self.X, y=self.Y, c=self.C )
         
         sctrObj = self.chart.scatter( x=self.X, y=self.Y, c=self.C, marker="s", cmap='RdYlBu_r')
@@ -294,6 +296,8 @@ class SiqoChart(ttk.Frame):
             y = float(event.ydata)
             
             print(f'x={x},  y={y}, ax={ax}')
+            
+            
             
         else:
             print('Clicked ouside axes bounds but inside plot window')
