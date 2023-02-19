@@ -4,16 +4,13 @@
 import sys
 sys.path.append('..\siqo_lib')
 
-from   siqo_journal        import SiqoJournal
-
 import tkinter                as tk
 from   tkinter                import (ttk, font, PanedWindow)
-from tkinter.messagebox import showinfo
+from   tkinter.messagebox     import showinfo
 
 from   matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from   mpl_toolkits                      import mplot3d
 
-import cmath             as cm
 import numpy             as np
 import matplotlib.pyplot as plt
 
@@ -69,16 +66,18 @@ class SiqoChart(ttk.Frame):
         #----------------------------------------------------------------------
         # Internal objects
         #----------------------------------------------------------------------
-        self.type  = '2D'          # Actual type of the chart
-        self.lstCP = []            # List of values (cP)
+        self.type     = '2D'     # Actual type of the chart
+        self.CPs      = []       # List of values (cP)
+        self.actPoint = None     # Actual working point
+
         
-        self.keyX  = ''            # Dimension name for coordinate X
-        self.X     = None          # np array for coordinate X
-        self.keyY  = ''            # Dimension name for coordinate Y
-        self.Y     = None          # np array for coordinate Y
-        self.C     = None          # np array for value color
-        self.U     = None          # np array for quiver re value
-        self.V     = None          # np array for quiver im value
+        self.keyX     = ''       # Dimension name for coordinate X
+        self.X        = None     # np array for coordinate X
+        self.keyY     = ''       # Dimension name for coordinate Y
+        self.Y        = None     # np array for coordinate Y
+        self.C        = None     # np array for value color
+        self.U        = None     # np array for quiver re value
+        self.V        = None     # np array for quiver im value
 
         self.clear()
 
@@ -141,7 +140,6 @@ class SiqoChart(ttk.Frame):
         self.cbY.bind('<<ComboboxSelected>>', self.dataChanged)
         self.cbY.grid(column=2, row=1, sticky=tk.W, padx=_PADX, pady=_PADY)
         
-        
         self.cbLogY = ttk.Checkbutton(frmBtn, text='LogY', command=self.show)
         self.cbLogY.grid(column=2, row=1, pady=_PADY)
 
@@ -150,6 +148,7 @@ class SiqoChart(ttk.Frame):
         #----------------------------------------------------------------------
         self.figure = plt.figure(figsize=(self.w*_FIG_W/100, self.h*_FIG_H/100), dpi=_DPI)
         self.canvas = FigureCanvasTkAgg(self.figure, self)
+        
         self.canvas.callbacks.connect('button_press_event', self.on_click)
         
         NavigationToolbar2Tk(self.canvas, self)
@@ -157,9 +156,19 @@ class SiqoChart(ttk.Frame):
         self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
         
         #----------------------------------------------------------------------
+        # Vytvorim Menu pre click on Point
+        #----------------------------------------------------------------------
+        self.pointMenu = tk.Menu(self, tearoff = 0)
+        self.pointMenu.add_command(label ="Set to (0,0)", command=lambda c=complex(0,0): self.setPoint(c))
+        self.pointMenu.add_command(label ="Set to (1,0)", command=lambda c=complex(1,0): self.setPoint(c))
+        self.pointMenu.add_command(label ="Set to (0,1)", command=lambda c=complex(0,1): self.setPoint(c))
+        self.pointMenu.add_command(label ="Set to (1,1)", command=lambda c=complex(1,1): self.setPoint(c))
+        
+        #----------------------------------------------------------------------
+        # Initialisation
+        #----------------------------------------------------------------------
         self.dataChanged()
 
-        #----------------------------------------------------------------------
         self.journal.O()
 
     #--------------------------------------------------------------------------
@@ -185,7 +194,8 @@ class SiqoChart(ttk.Frame):
         #----------------------------------------------------------------------
         # Default filter with placeholders for all dimensions
         #----------------------------------------------------------------------
-        cut = [0 for i in range(self.dat.getDimMax())]
+#        cut = [0 for i in range(self.dat.getDimMax())]
+        cut = [0,0]
         
         #----------------------------------------------------------------------
         # Set actual filter and get data
@@ -219,7 +229,7 @@ class SiqoChart(ttk.Frame):
         #----------------------------------------------------------------------
         # Remember values (list of cP) for this dataset
         #----------------------------------------------------------------------
-        self.lstCP = dat[-1]['arr']
+        self.CPs = dat[-1]['arr']
         
         self.journal.O()
         self.show()
@@ -235,6 +245,14 @@ class SiqoChart(ttk.Frame):
         
         self.dat = dat
         
+    #--------------------------------------------------------------------------
+    def setPoint(self, c):
+        
+        self.journal.M(f'{self.name}.setPoint: {self.actPoint} = {c}')
+        
+        self.actPoint.setVal(c)
+        self.dataChanged()
+        
     #==========================================================================
     # Show the chart
     #--------------------------------------------------------------------------
@@ -249,7 +267,7 @@ class SiqoChart(ttk.Frame):
         arrC = []
         
         # Value is in the last position in the list
-        for cP in self.lstCP:
+        for cP in self.CPs:
             
             if   val == 're'  : arrC.append( cP.real() )
             elif val == 'im'  : arrC.append( cP.imag() )
@@ -296,23 +314,47 @@ class SiqoChart(ttk.Frame):
     def on_click(self, event):
         "Print information about mouse-given position"
         
+        self.journal.I(f'{self.name}.on_click:')
+
         if event.inaxes is not None:
             
-            ax = event.inaxes.get_title()
-            x = float(event.xdata)
-            y = float(event.ydata)
-            
-            print(f'x={x},  y={y}, ax={ax}')
+            ax  = event.inaxes.get_title()
+            btn = event.button
+            #           btn = event.num
+            x = round(float(event.xdata), 3)
+            y = round(float(event.ydata), 3)
             
             if self.is1D(): coord = [y   ]
             else          : coord = [y, x]
             
-            cP = self.dat.getPointByCoord(coord)
-            print(f'cP={cP}')
+            self.actPoint = self.dat.getPointByCoord(coord)
+            
+            #------------------------------------------------------------------
+            # Left button
+            #------------------------------------------------------------------
+            if btn == 1: #MouseButton.LEFT:
+               tit = f'Nearest point to [{round(y,2)}, {round(x,2)}]'
+               mes = str(self.actPoint)
+               showinfo(title=tit, message=mes)
+            
+            #------------------------------------------------------------------
+            # Right button - edit value menu
+            #------------------------------------------------------------------
+            elif btn == 3: #MouseButton.RIGHT:
+                
+                self.journal.M(f'{self.name}.on_click: right click for {self.actPoint}')
+                
+                try    : self.pointMenu.tk_popup(event.x, event.y)
+                finally: self.pointMenu.grab_release()
+            
+            #------------------------------------------------------------------
             
         else:
+            self.actPoint = None
             print('Clicked ouside axes bounds but inside plot window')
         
+        self.journal.O()
+
     #==========================================================================
     # Tools for figure setting
     #--------------------------------------------------------------------------
