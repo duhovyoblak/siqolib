@@ -163,6 +163,15 @@ class SiqoChart(ttk.Frame):
         self.journal.O()
 
     #--------------------------------------------------------------------------
+    def is1D(self):
+
+        # Only axis X can be void
+        axX = int(self.strX.get())
+        
+        if axX==0: return True
+        else     : return False
+        
+#--------------------------------------------------------------------------
     def dataChanged(self, event=None):
         
         #----------------------------------------------------------------------
@@ -181,9 +190,7 @@ class SiqoChart(ttk.Frame):
         #----------------------------------------------------------------------
         # Set actual filter and get data
         #----------------------------------------------------------------------
-
-        if axX==0: cut = [-1]
-        
+        if self.is1D(): cut = [-1]
         else:
             cut[axX-1] = -1
             cut[axY-1] = -1
@@ -199,13 +206,13 @@ class SiqoChart(ttk.Frame):
         self.Y    = dat[axY-1]['arr']
         self.journal.M(f'{self.name}.dataChanged: keyY={self.keyY}')
         
-        if axX > 0:
-            self.keyX = dat[axX-1]['key']
-            self.X    = dat[axX-1]['arr']
-            
-        else:
+        if self.is1D():
             self.keyX = 'No dimension'
             self.X    = np.zeros(len(self.Y))
+            
+        else:
+            self.keyX = dat[axX-1]['key']
+            self.X    = dat[axX-1]['arr']
 
         self.journal.M(f'{self.name}.dataChanged: keyX={self.keyX}')
         
@@ -297,7 +304,11 @@ class SiqoChart(ttk.Frame):
             
             print(f'x={x},  y={y}, ax={ax}')
             
+            if self.is1D(): coord = [y   ]
+            else          : coord = [y, x]
             
+            cP = self.dat.getPointByCoord(coord)
+            print(f'cP={cP}')
             
         else:
             print('Clicked ouside axes bounds but inside plot window')
