@@ -142,6 +142,12 @@ def dictSort(dct, sortKey=(1,), reverse=False):
         return toRet
 
 #------------------------------------------------------------------------------
+def listSort(lst, key, reverse=False):
+    "Returns sorted list of dictionaries"
+    
+    return sorted(lst, key=lambda d: d[key])
+
+#------------------------------------------------------------------------------
 def b64enc(s):
 
     return base64.b64encode(s.encode("ascii")).decode('ascii')
