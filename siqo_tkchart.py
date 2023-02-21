@@ -9,11 +9,10 @@ from   tkinter                import (ttk, font, PanedWindow)
 from   tkinter.messagebox     import showinfo
 
 from   matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
-from   mpl_toolkits                      import mplot3d
+#from   mpl_toolkits                      import mplot3d
 
 import numpy             as np
 import matplotlib.pyplot as plt
-
 
 #==============================================================================
 # package's constants
@@ -47,6 +46,7 @@ class SiqoChart(ttk.Frame):
         self.journal = journal
         self.name    = name
         self.dat     = dat
+        self.myCut   = []    # Cut for this GUI
         self.w       = 1200
         self.h       =  800
         
@@ -78,8 +78,6 @@ class SiqoChart(ttk.Frame):
         self.C        = None     # np array for value color
         self.U        = None     # np array for quiver re value
         self.V        = None     # np array for quiver im value
-
-        self.clear()
 
         #----------------------------------------------------------------------
         # Initialise original tkInter.Tk
@@ -144,6 +142,12 @@ class SiqoChart(ttk.Frame):
         self.cbLogY.grid(column=2, row=1, pady=_PADY)
 
         #----------------------------------------------------------------------
+        # Clear data
+        #----------------------------------------------------------------------
+        self.btn_clr = ttk.Button(frmBtn, text='Clear data', command=self.clear)
+        self.btn_clr.grid(column=3, row=1, pady=_PADY)
+
+        #----------------------------------------------------------------------
         # Create a figure with the navigator bar and bind to mouse events
         #----------------------------------------------------------------------
         self.figure = plt.figure(figsize=(self.w*_FIG_W/100, self.h*_FIG_H/100), dpi=_DPI)
@@ -195,19 +199,19 @@ class SiqoChart(ttk.Frame):
         # Default filter with placeholders for all dimensions
         #----------------------------------------------------------------------
 #        cut = [0 for i in range(self.dat.getDimMax())]
-        cut = [0,0]
+        self.myCut = [0,0]
         
         #----------------------------------------------------------------------
         # Set actual filter and get data
         #----------------------------------------------------------------------
-        if self.is1D(): cut = [-1]
+        if self.is1D(): self.myCut = [-1]
         else:
-            cut[axX-1] = -1
-            cut[axY-1] = -1
+            self.myCut[axX-1] = -1
+            self.myCut[axY-1] = -1
         
-        self.journal.M(f'{self.name}.dataChanged: cut={cut}')
+        self.journal.M(f'{self.name}.dataChanged: cut={self.myCut}')
 
-        dat = self.dat.getData(cut=cut)
+        dat = self.dat.getData(cut=self.myCut)
 
         #----------------------------------------------------------------------
         # Assign coordinate arrays
@@ -236,9 +240,18 @@ class SiqoChart(ttk.Frame):
         
     #--------------------------------------------------------------------------
     def clear(self):
+        "Clears data in active cut"
         
-        pass
-    
+        self.journal.I(f'{self.name}.clear: with cut = {self.myCut}')
+
+        self.dat.cut = self.myCut
+        
+        for obj in self.dat:
+            obj['cP'].clear()
+            
+        self.dataChanged()
+        self.journal.O()
+
     #--------------------------------------------------------------------------
     def setData(self, dat):
         "Clears data and set new data"
@@ -300,7 +313,7 @@ class SiqoChart(ttk.Frame):
         
         sctrObj = self.chart.scatter( x=self.X, y=self.Y, c=self.C, marker="s", cmap='RdYlBu_r')
 #        sctrObj = self.chart.scatter( x=self.X, y=self.Y, c=self.C, marker="s", lw=0, s=(72./self.figure.dpi)**2, cmap='RdYlBu_r')
-#        self.figure.colorbar(sctrObj, ax=self.chart)
+        self.figure.colorbar(sctrObj, ax=self.chart)
             
 
         # Vykreslenie noveho grafu
@@ -318,7 +331,7 @@ class SiqoChart(ttk.Frame):
 
         if event.inaxes is not None:
             
-            ax  = event.inaxes.get_title()
+#            ax  = event.inaxes.get_title()
             btn = event.button
             #           btn = event.num
             x = round(float(event.xdata), 3)
