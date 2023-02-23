@@ -106,7 +106,7 @@ class SiqoChart(ttk.Frame):
         lblVal.grid(column=0, row=0, sticky=tk.W, padx=_PADX, pady=_PADY)
 
         self.cbVal = ttk.Combobox(frmBtn, textvariable=self.strVal, width=5)
-        self.cbVal['values'] = ['re', 'im', 'abs']
+        self.cbVal['values'] = ['re', 'im', 'phase', 'abs', 'sqr']
         self.cbVal['state' ] = 'readonly'
         self.cbVal.bind('<<ComboboxSelected>>', self.show)
         self.cbVal.grid(column=0, row=1, sticky=tk.W, padx=_PADX, pady=_PADY)
@@ -163,10 +163,11 @@ class SiqoChart(ttk.Frame):
         # Vytvorim Menu pre click on Point
         #----------------------------------------------------------------------
         self.pointMenu = tk.Menu(self, tearoff = 0)
-        self.pointMenu.add_command(label ="Set to (0,0)", command=lambda c=complex(0,0): self.setPoint(c))
-        self.pointMenu.add_command(label ="Set to (1,0)", command=lambda c=complex(1,0): self.setPoint(c))
-        self.pointMenu.add_command(label ="Set to (0,1)", command=lambda c=complex(0,1): self.setPoint(c))
-        self.pointMenu.add_command(label ="Set to (1,1)", command=lambda c=complex(1,1): self.setPoint(c))
+        self.pointMenu.add_command(label ="Set to ( 0,0)", command=lambda c=complex( 0,0): self.setPoint(c))
+        self.pointMenu.add_command(label ="Set to ( 1,0)", command=lambda c=complex( 1,0): self.setPoint(c))
+        self.pointMenu.add_command(label ="Set to (-1,0)", command=lambda c=complex(-1,0): self.setPoint(c))
+        self.pointMenu.add_command(label ="Set to (0, 1)", command=lambda c=complex(0, 1): self.setPoint(c))
+        self.pointMenu.add_command(label ="Set to (0,-1)", command=lambda c=complex(0,-1): self.setPoint(c))
         
         #----------------------------------------------------------------------
         # Initialisation
@@ -282,9 +283,11 @@ class SiqoChart(ttk.Frame):
         # Value is in the last position in the list
         for cP in self.CPs:
             
-            if   val == 're'  : arrC.append( cP.real() )
-            elif val == 'im'  : arrC.append( cP.imag() )
-            elif val == 'abs' : arrC.append( cP.abs()  )
+            if   val == 're'    : arrC.append( cP.real() )
+            elif val == 'im'    : arrC.append( cP.imag() )
+            elif val == 'abs'   : arrC.append( cP.abs()  )
+            elif val == 'phase' : arrC.append( cP.phase())
+            elif val == 'sqr'   : arrC.append( cP.sqr()  )
             
         self.C = np.array(arrC)
         
