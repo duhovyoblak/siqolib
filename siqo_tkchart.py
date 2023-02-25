@@ -47,8 +47,8 @@ class SiqoChart(ttk.Frame):
         self.name    = name
         self.dat     = dat
         self.myCut   = []    # Cut for this GUI
-        self.w       = 1200
-        self.h       =  800
+        self.w       = 1600
+        self.h       =  900
         
         self.strVal = tk.StringVar()
         self.strX   = tk.StringVar()
@@ -348,7 +348,7 @@ class SiqoChart(ttk.Frame):
             #------------------------------------------------------------------
             # Left button
             #------------------------------------------------------------------
-            if btn == 1: #MouseButton.LEFT:
+            if btn == 1 and False: #MouseButton.LEFT:
                tit = f'Nearest point to [{round(y,2)}, {round(x,2)}]'
                mes = str(self.actPoint)
                showinfo(title=tit, message=mes)
