@@ -8,7 +8,8 @@ import os
 #==============================================================================
 # package's constants
 #------------------------------------------------------------------------------
-_INDENT_START = 1
+_INDENT_START =   1
+_INDENT_MAX   =  20
 
 _UPPER        = '\u250C'
 _MID          = '\u2502'
@@ -51,7 +52,7 @@ class SiqoJournal:
         "Vypise zaznam journalu do terminalu"
         
         # Upravim odsadenie podla step
-        if step == 'IN': self.indent += 1
+        if (step == 'IN') and (self.indent < _INDENT_MAX): self.indent += 1
             
         #----------------------------------------------------------------------
         # Head of the line
@@ -61,7 +62,7 @@ class SiqoJournal:
         if self.verbose: ids = f'<{id(self)}>'
         else           : ids = ''
         
-        head = '{}{} {}>'.format( ids, datetime.now(_TIME_ZONE).time().strftime('%H:%M:%S'), self.user )
+        head = '{}{} {}>'.format( ids, datetime.now(_TIME_ZONE).strftime('%d.%m. %H:%M:%S'), self.user )
         
         #----------------------------------------------------------------------
         # Priprava vystupu - line
@@ -182,10 +183,8 @@ class SiqoJournal:
                     toRet.append(line.strip())
 
         #----------------------------------------------------------------------
-        # Reversnem poradie a vratim prvych maxLinesriadkov
+        # Vratim poslednych <maxLines> riadkov
         #----------------------------------------------------------------------
-#        toRet.reverse()
-        
         return toRet[-maxLines:]
         
     #--------------------------------------------------------------------------
@@ -222,7 +221,7 @@ class SiqoJournal:
 #==============================================================================
 # Journal
 #------------------------------------------------------------------------------
-print('Siqo journal ver 1.21')
+print('Siqo journal ver 1.22')
 
 #==============================================================================
 #                              END OF FILE

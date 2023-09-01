@@ -60,12 +60,16 @@ def loadJson(journal, fileName, enc='utf-8'):
     toret = None
     
     if os.path.exists(fileName): 
-        
-        with open(fileName, encoding=enc) as file:
-            toret = json.load(file)
-            
-        journal.M('SIQO.loadJson: From {} was loaded {} entries'.format(fileName, len(toret)))
-        
+       
+        try:
+            with open(fileName, encoding=enc) as file:
+                toret = json.load(file)
+                
+            journal.M('SIQO.loadJson: From {} was loaded {} entries'.format(fileName, len(toret)))
+                
+        except Exception as err:
+            journal.M('SIQO.loadJson: {} ERROR {}'.format(fileName, str(err)), True)
+
     else: journal.M('SIQO.loadJson: ERROR File {} does not exist'.format(fileName), True)
     
     return toret
@@ -81,7 +85,7 @@ def dumpJson(journal, fileName, data, enc='utf-8'):
         journal.M('SIQO.dumpJson: {} saved'.format(fileName))
 
     except Exception as err:
-        journal.M('SIQO.dumpJson: {} ERROR {}'.format(fileName, err), True)
+        journal.M('SIQO.dumpJson: {} ERROR {}'.format(fileName, str(err)), True)
     
 #------------------------------------------------------------------------------
 def dumpCsv(journal, fileName, data):
@@ -176,7 +180,7 @@ def getPasw(journal, con, user):
 #==============================================================================
 #   Inicializacia kniznice
 #------------------------------------------------------------------------------
-print('SIQO general library ver 1.08')
+print('SIQO general library ver 1.08e')
 
 #==============================================================================
 #                              END OF FILE
