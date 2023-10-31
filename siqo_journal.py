@@ -9,7 +9,10 @@ import os
 # package's constants
 #------------------------------------------------------------------------------
 _INDENT_START =   1
-_INDENT_MAX   =  20
+_INDENT_MAX   = 100
+
+_MAX_LINES    = 10000    # Maximalny pocet riadkov v pamati
+_CUT_LINES    =   100    # Po presiahnuti _MAX_LINES zostane _CUT_LINES
 
 _UPPER        = '\u250C'
 _MID          = '\u2502'
@@ -30,20 +33,22 @@ class SiqoJournal:
     #==========================================================================
     # Constructor & utilities
     #--------------------------------------------------------------------------
-    def __init__(self, name, debug=3, verbose=False, fileOnly=False):
+    def __init__(self, name, debug=3, printLine=True, createFile=True, folder='', verbose=False):
         "Call constructor of SiqoJournal and initialise it with empty data"
         
         self.name       = name          # Nazov journalu
         self.user       = ''            # Nazov usera, ktory pouziva journal
         self.debugLevel = debug         # Pocet vnoreni, ktore sa vypisu do journalu
-        self.fileOnly   = fileOnly      # Ci sa bude zapisovat IBA do suboru
+        self.printLine  = printLine     # Ci sa ma journal vypisovat na obrazovku
+        self.createFile = createFile    # Ci sa ma journal zapisovat do suboru
+        self.folder     = folder        # Folder BEZ koncoveho lomitka, do ktoreho sa bude zapisovat journal na disk
         
         self.indent     = _INDENT_START # Aktualne vnorenie
         self.showAll    = False         # Overrride debugLevel. Ak True, bude sa vypisovat VSETKO
         self.out        = []            # Zoznam vypisanych riadkov, pre zapis na disk
         
         self.reset()
-        self.verbose    = verbose  # Ci ma vypisovat info instancii journalu
+        self.verbose    = verbose       # Ci ma vypisovat info instancii journalu
     
     #==========================================================================
     # API for users
@@ -51,7 +56,9 @@ class SiqoJournal:
     def M(self, mess='', force=False, user='', step='' ):
         "Vypise zaznam journalu do terminalu"
         
+        #----------------------------------------------------------------------
         # Upravim odsadenie podla step
+        #----------------------------------------------------------------------
         if (step == 'IN') and (self.indent < _INDENT_MAX): self.indent += 1
             
         #----------------------------------------------------------------------
@@ -79,13 +86,31 @@ class SiqoJournal:
         #----------------------------------------------------------------------
         # Vystup na obrazovku
         #----------------------------------------------------------------------
-        if line and not self.fileOnly: print(line)
+        if line and self.printLine: print(line)
 
         #----------------------------------------------------------------------
-        # Vystup do zoznamu v pamati
+        # Vystup do zoznamu v pamati a kontrola pretecenia
         #----------------------------------------------------------------------
-        if line: self.out.append(line) 
+        if line: 
+            
+            self.out.append(line)
+            
+            #------------------------------------------------------------------
+            # Ak zoznam sprav pretiekol
+            #------------------------------------------------------------------
+            if len(self.out) > _MAX_LINES:
+                
+                # Pokusim sa odlozit pamat na disk
+                self.dumpOut()
+                
+                # Ponecham poslednych _CUT_LINES sprav
+                self.out = self.out[-_CUT_LINES:]
 
+        #----------------------------------------------------------------------
+        # Ak islo o emergency vypis, zapis jounal do suboru
+        #----------------------------------------------------------------------
+        if force: self.dumpOut()
+            
         #----------------------------------------------------------------------
         # Upravim odsadenie podla step
         #----------------------------------------------------------------------
@@ -93,10 +118,6 @@ class SiqoJournal:
         if self.indent < _INDENT_START: self.indent = _INDENT_START
             
         #----------------------------------------------------------------------
-        # Ak islo o emergency vypis, zapis jounal do suboru
-        #----------------------------------------------------------------------
-        if force: self.dumpOut()
-            
         return len(self.out)-1
     
     #--------------------------------------------------------------------------
@@ -150,12 +171,54 @@ class SiqoJournal:
         for mess in self.out[a:b]: print(mess)
         
     #--------------------------------------------------------------------------
+    def getLog(self, maxLines=40):
+        "Vrati list poslednych <maxLines> sprav v zozname"
+
+        #----------------------------------------------------------------------
+        # Ziskam riadky z logu
+        #----------------------------------------------------------------------
+        toRet = [['Time', 'Log']]
+        
+        #----------------------------------------------------------------------
+        # Ak je journal odkladany do suboru
+        #----------------------------------------------------------------------
+        if self.createFile:
+            
+            self.journal.dumpOut()
+            logs = self.journal.getFromFile(maxLines)
+            
+        #----------------------------------------------------------------------
+        # Ak je journal ulozeny iba do pamati
+        #----------------------------------------------------------------------
+        else: 
+            logs = self.out[-maxLines:]
+
+        #----------------------------------------------------------------------
+        # Sformatujem riadky logu do tabulky [(,)]
+        #----------------------------------------------------------------------
+        if logs is not None:
+            for log in logs: toRet.append( [log[:15], log[17:]] )
+                
+        toRet.append(['', ''])
+
+        return toRet
+        
+    #==========================================================================
+    # Persistency methods
+    #--------------------------------------------------------------------------
+    def fileName(self):
+        "Returns actual filename for this Journal"
+        
+        if self.folder != '': return f'{self.folder}/{self.name}.journal'
+        else                : return f'{self.name}.journal'
+        
+    #--------------------------------------------------------------------------
     def dumpOut(self, enc='utf-8'):
         "Zapise journal na koniec suboru <fileName> a vycisti pamat <out>"
         
-        if len(self.out)>0:
+        if len(self.out)>0 and self.createFile:
 
-            fileName = '{}.journal'.format(self.name)
+            fileName = self.fileName()
 
             file = open(fileName, "a", encoding=enc)
             for mess in self.out: file.writelines([mess, '\n'])
@@ -170,7 +233,7 @@ class SiqoJournal:
         "Nacita z disku journal a vrati ho"
         
         toRet = []
-        fileName = '{}.journal'.format(self.name)
+        fileName = self.fileName()
         
         #----------------------------------------------------------------------
         # Ak subor existuje, nacitam ho
@@ -191,10 +254,12 @@ class SiqoJournal:
     def removeFile(self):
         "Zmaze subor journalu z disku"
         
-        fileName = '{}.journal'.format(self.name)
+        fileName = self.fileName()
         
         if os.path.exists(fileName): os.remove(fileName)
             
+    #==========================================================================
+    # Reset journal
     #--------------------------------------------------------------------------
     def reset(self, name=None, user=None):
         "Resetne parametre journalu na default hodnoty"
@@ -211,17 +276,14 @@ class SiqoJournal:
         self.removeFile()
         
         # Zapis do journalu
-        self.M('/////////////////////// Journal reset, name={}, debug level={} & fileOnly={} ////////////////// {}'.format(self.name, self.debugLevel, self.fileOnly, date.today().strftime("%A %d.%m.%Y")), True)
+        self.M('<< Journal reset, name={}, debug level={} & printLine={} >> {}'.format(self.name, self.debugLevel, self.printLine, date.today().strftime("%A %d.%m.%Y")), True)
         
-#        if self.debugLevel == 0: print("Journal '{}' will be quiet and will produce no output".format(self.name))
-#        if self.fileOnly       : print("Journal '{}' will will produce output to file ONLY".format(self.name))
-
 #------------------------------------------------------------------------------
 
 #==============================================================================
 # Journal
 #------------------------------------------------------------------------------
-print('Siqo journal ver 1.22')
+print('Siqo journal ver 1.24')
 
 #==============================================================================
 #                              END OF FILE
