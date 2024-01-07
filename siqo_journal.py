@@ -8,8 +8,10 @@ import os
 #==============================================================================
 # package's constants
 #------------------------------------------------------------------------------
-_INDENT_START =   1
-_INDENT_MAX   = 100
+_VER          = '1.25'
+
+_INDENT_START =     1
+_INDENT_MAX   =   100
 
 _MAX_LINES    = 10000    # Maximalny pocet riadkov v pamati
 _CUT_LINES    =   100    # Po presiahnuti _MAX_LINES zostane _CUT_LINES
@@ -86,7 +88,19 @@ class SiqoJournal:
         #----------------------------------------------------------------------
         # Vystup na obrazovku
         #----------------------------------------------------------------------
-        if line and self.printLine: print(line)
+        if line and self.printLine: 
+            
+            try: print(line)
+            except UnicodeEncodeError:
+                
+                s = "".join(c for c in line if ord(c)<128)
+                line = f"<ASCII>:{s}"
+                print(line)
+                
+            except Exception as err:
+                
+                line = f'ex {str(err)}'
+                print(line)
 
         #----------------------------------------------------------------------
         # Vystup do zoznamu v pamati a kontrola pretecenia
@@ -283,7 +297,7 @@ class SiqoJournal:
 #==============================================================================
 # Journal
 #------------------------------------------------------------------------------
-print('Siqo journal ver 1.24')
+print(f'Siqo journal ver {_VER}')
 
 #==============================================================================
 #                              END OF FILE

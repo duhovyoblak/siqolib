@@ -13,7 +13,7 @@ from   datetime        import date
 #==============================================================================
 # package's constants
 #------------------------------------------------------------------------------
-
+_VER      = '1.16'
 #==============================================================================
 # package's variables
 #------------------------------------------------------------------------------
@@ -361,6 +361,92 @@ def getMask(s):
         
     return toRet
         
+#------------------------------------------------------------------------------
+def strXor(s1, s2):
+    
+    if len(s1) > len(s2):
+        text = s1
+        key  = s2
+        
+    else:
+        text = s2
+        key  = s1
+        
+    lenKey = len(key)
+    pos    = 0
+    
+    toRet = ''
+    
+    for ch in text:
+        
+        n1 = ord(ch)
+        n2 = ord(key[pos%lenKey])
+        
+        toRet = toRet + chr(n1^n2)
+        
+        pos += 1
+        
+    return toRet
+    
+#------------------------------------------------------------------------------
+def strFibbMod(s, state=382362):
+    
+    toRet = []
+    sLen  = len(s)
+    
+    for ch in s:
+        state = (state + ord(ch)) % sLen        
+        toRet.append(state)
+    
+    return toRet
+
+#------------------------------------------------------------------------------
+def strOrder(s, order):
+    
+    toRet = ''
+
+    for pos in order: toRet += s[pos] 
+
+    return toRet
+
+#------------------------------------------------------------------------------
+def strChsum(s):
+    
+    toRet = 0
+    sLen  = len(s)
+    
+    for ch in s: toRet = (toRet + ord(ch)) % sLen
+    
+    return toRet
+
+#------------------------------------------------------------------------------
+def strSalted(s, state=None):
+    
+    if state is None: state = strChsum(s)
+    
+    order = strFibbMod(s, state)
+    return strOrder(s, order)
+
+#------------------------------------------------------------------------------
+def strWatermark(s1, s2):
+    
+    toRet = ''
+    lenS2 = len(s2)
+    
+    p1 = 0
+    
+    for ch in s1:
+      
+        n1 = ord(ch)     # Pozicia v s1
+        p2 = p1%lenS2    # Pozicia v s2
+        
+        if 3*(n1%(p2+1)) > lenS2: toRet += s2[p2]
+        else                    : toRet += ch
+        
+        p1 += 1
+
+    return toRet
+    
 #==============================================================================
 # Persistency Tools
 #------------------------------------------------------------------------------
@@ -708,21 +794,20 @@ def getPasw(journal, con, user):
     journal.I(f"SIQO.getPasw: '{con}', '{user}'")
     
     envKey   = f'PWD_{con.upper()}_{user.upper()}'
-    b64_pasw = os.environ.get(envKey, None)
+    pasw = os.environ.get(envKey, None)
     
-    if b64_pasw is None:
+    if pasw is None:
         journal.M(f"SIQO.getPasw: WARNING - Password for '{envKey}' does not exist", True)
         journal.O()
         return None
     
     journal.O()
-    return b64dec(b64_pasw)
+    return pasw
 
 #==============================================================================
 #   Inicializacia kniznice
 #------------------------------------------------------------------------------
-
-print('SIQO general library ver 1.13')
+print(f'SIQO general library ver {_VER}')
 
 #==============================================================================
 #                              END OF FILE
