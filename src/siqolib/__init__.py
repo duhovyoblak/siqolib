@@ -1,14 +1,12 @@
 #==============================================================================
-#  SIQO Web server: Initialization of the Server
+#  SIQO library: Initialization
 #------------------------------------------------------------------------------
 import os
 
-from   siqo_journal     import SiqoJournal
 
 #==============================================================================
 # Setting the environment
 #------------------------------------------------------------------------------
-os.environ['siqo-test'] = '1'
 
 #==============================================================================
 
@@ -32,12 +30,7 @@ _CWD      = os.getcwd()
 # Main
 if __name__ =='__main__':
 
-    journal = SiqoJournal('siqolib', debug=2)
-    journal.I( 'siqolib init' )
-    
-    
-    
-    journal.O()
+    pass
     
 #==============================================================================
 print(f"siqolib.__init__ {_VER} at {_CWD}")

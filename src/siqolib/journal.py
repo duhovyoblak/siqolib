@@ -8,10 +8,10 @@ import os
 #==============================================================================
 # package's constants
 #------------------------------------------------------------------------------
-_VER          = '1.25'
+_VER         = '1.25'
 
-_INDENT_START =     1
-_INDENT_MAX   =   100
+_INDENT_START =   1
+_INDENT_MAX   = 100
 
 _MAX_LINES    = 10000    # Maximalny pocet riadkov v pamati
 _CUT_LINES    =   100    # Po presiahnuti _MAX_LINES zostane _CUT_LINES
@@ -71,7 +71,7 @@ class SiqoJournal:
         if self.verbose: ids = f'<{id(self)}>'
         else           : ids = ''
         
-        head = '{}{} {}>'.format( ids, datetime.now(_TIME_ZONE).strftime('%d.%m. %H:%M:%S'), self.user )
+        head = '{}{} {}>'.format( ids, datetime.now(_TIME_ZONE).strftime('%Y-%m-%d %H:%M:%S'), self.user )
         
         #----------------------------------------------------------------------
         # Priprava vystupu - line
@@ -88,19 +88,7 @@ class SiqoJournal:
         #----------------------------------------------------------------------
         # Vystup na obrazovku
         #----------------------------------------------------------------------
-        if line and self.printLine: 
-            
-            try: print(line)
-            except UnicodeEncodeError:
-                
-                s = "".join(c for c in line if ord(c)<128)
-                line = f"<ASCII>:{s}"
-                print(line)
-                
-            except Exception as err:
-                
-                line = f'ex {str(err)}'
-                print(line)
+        if line and self.printLine: print(line)
 
         #----------------------------------------------------------------------
         # Vystup do zoznamu v pamati a kontrola pretecenia
@@ -198,8 +186,8 @@ class SiqoJournal:
         #----------------------------------------------------------------------
         if self.createFile:
             
-            self.journal.dumpOut()
-            logs = self.journal.getFromFile(maxLines)
+            self.dumpOut()
+            logs = self.getFromFile(maxLines)
             
         #----------------------------------------------------------------------
         # Ak je journal ulozeny iba do pamati
@@ -211,7 +199,7 @@ class SiqoJournal:
         # Sformatujem riadky logu do tabulky [(,)]
         #----------------------------------------------------------------------
         if logs is not None:
-            for log in logs: toRet.append( [log[:15], log[17:]] )
+            for log in logs: toRet.append( [log[:19], log[21:]] )
                 
         toRet.append(['', ''])
 
@@ -297,7 +285,7 @@ class SiqoJournal:
 #==============================================================================
 # Journal
 #------------------------------------------------------------------------------
-print(f'Siqo journal ver {_VER}')
+print(f'SIQO Journal library ver {_VER}')
 
 #==============================================================================
 #                              END OF FILE

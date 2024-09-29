@@ -1,2 +1,3 @@
-# package siqolib
-Library for SIQO projects
+# siqolib Package
+
+This is 

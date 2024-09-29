@@ -1,5 +1,5 @@
 #==============================================================================
-# Siqo general library
+# Siqo general library / VERZIA BEZ PANDAS
 #------------------------------------------------------------------------------
 import os
 import pickle
@@ -7,13 +7,13 @@ import json
 import re
 import base64
 
-import pandas        as pd
+# import pandas        as pd
 from   datetime        import date
 
 #==============================================================================
 # package's constants
 #------------------------------------------------------------------------------
-_VER      = '1.16'
+_VER      = '1.15'
 #==============================================================================
 # package's variables
 #------------------------------------------------------------------------------
@@ -539,10 +539,10 @@ def dumpJson(journal, fileName, data, enc='utf-8'):
 #------------------------------------------------------------------------------
 def dumpCsv(journal, fileName, data):
 
-    df = pd.DataFrame(data)
-    df.to_csv(fileName, index=False)    
+#    df = pd.DataFrame(data)
+#    df.to_csv(fileName, index=False)    
     
-    journal.M('SIQO.dumpCsv: {} saved'.format(fileName))
+    journal.M('SIQO.dumpCsv: {} NOT SAVED BECAUSE OF PANDAS'.format(fileName))
 
 #------------------------------------------------------------------------------
 def picObj(journal, fileName, obj):
@@ -807,6 +807,7 @@ def getPasw(journal, con, user):
 #==============================================================================
 #   Inicializacia kniznice
 #------------------------------------------------------------------------------
+
 print(f'SIQO general library ver {_VER}')
 
 #==============================================================================
