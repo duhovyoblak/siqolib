@@ -1,2 +1,2 @@
-# siqo_lib
+# package siqolib
 Library for SIQO projects
