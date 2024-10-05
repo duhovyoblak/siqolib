@@ -6,18 +6,321 @@ import pickle
 import json
 import re
 import base64
+import pytz
 
-# import pandas        as pd
 from   datetime        import date
 
 #==============================================================================
 # package's constants
 #------------------------------------------------------------------------------
-_VER      = '1.15'
+_VER      = '1.16'
+
 #==============================================================================
 # package's variables
 #------------------------------------------------------------------------------
+_TIME_ZONE    = pytz.timezone('CET')   # Timezone in which library runs
 
+
+#==============================================================================
+# String Tools
+#------------------------------------------------------------------------------
+def coalesce(*args):
+    
+    for arg in args:
+        if arg is not None: return arg
+        
+    return None
+
+#------------------------------------------------------------------------------
+def quoted(s):
+    
+    return f"'{s}'"
+    
+#------------------------------------------------------------------------------
+def shrink(txt, toShrink=' '):
+    
+    toRet = txt
+    
+    #--------------------------------------------------------------------------
+    # Ziskam vsetky suvisle vyskyty toShrink texte a zmenim na jeden toShrink
+    #--------------------------------------------------------------------------
+    ss = toShrink + '{2,}'
+      
+    if re.search(ss, txt): toRet = re.sub(ss, toShrink, txt)
+    
+    #--------------------------------------------------------------------------
+    return toRet
+        
+#------------------------------------------------------------------------------
+def aliasSplit(txt):
+    
+    txt = txt.strip()
+    txt = shrink(txt)
+    
+    #--------------------------------------------------------------------------
+    # Zistim ci txt obsahuje ' AS ' 
+    #--------------------------------------------------------------------------
+    rx = txt.split(' AS ')
+            
+    #--------------------------------------------------------------------------
+    # Neobsahuje ' AS '
+    #--------------------------------------------------------------------------
+    if len(rx) == 1:
+                
+        #----------------------------------------------------------------------
+        # Zistim ci txt obsahuje ' ', t.j. alias
+        #----------------------------------------------------------------------
+        sx = txt.split(' ')
+                
+        #----------------------------------------------------------------------
+        # Neobsahuje alias
+        #----------------------------------------------------------------------
+        if len(sx) == 1:
+            stat = sx[0].strip()
+            alis = None
+                    
+        #----------------------------------------------------------------------
+        # Obsahuje alias
+        #----------------------------------------------------------------------
+        else:
+            stat = ' '.join(sx[0:-1]).strip()
+            alis = sx[-1].strip()
+                
+    #--------------------------------------------------------------------------
+    # Obsahuje ' AS '
+    #--------------------------------------------------------------------------
+    else:
+        stat = ' '.join(rx[0:-1]).strip()
+        alis = rx[-1].strip()
+                
+    #--------------------------------------------------------------------------
+    return (stat, alis)
+
+#==============================================================================
+# String value tests
+#------------------------------------------------------------------------------
+def isNumber(s):
+    
+    rx = re.findall(r'[^\d.-]', s)
+    if len(rx) > 0: return False
+    
+    try:
+        float(s)
+        return True
+    
+    except ValueError:
+        return False
+    
+#------------------------------------------------------------------------------
+def isRc(item):
+    
+    s = re.sub(r'[ .\-/]', '', item)
+    if (len(s)<9) or (len(s)>10): return 0
+    
+    return yy5mdd(s) and mod11(s)
+
+#------------------------------------------------------------------------------
+def mod11(item):
+
+    s = re.sub(r'[ .\-/]', '', item)
+
+    try   : i = int(s)
+    except: return False
+    
+    # Ak je delitelne 11 vratim 1 inak 0
+    if i%11 == 0: return True
+    else        : return False
+
+#------------------------------------------------------------------------------
+def isTime(item):
+    
+    rx = re.findall("^\\d{2}[ .:-][A-Z]{3}[ .:-]\\d{2}[ .:-]\\d{2}[ .:-]\\d{2}[ .:-]\\d{2}[.]\\d{6} [AP]M|^\\d{4}[ .:-]\\d{2}[ .:-]\\d{2}[ .:-]\\d{2}[ .:-]\\d{2}[ .:-]\\d{2}|^\\d{2}[ .:-]\\d{2}[ .:-]\\d{2}[ .:-]\\d{2}[ .:-]\\d{2}[ .:-]\\d{2}|^\\d{2}[.:-]\\d{2}[.:-]\\d{2}\\s*$|^\\d{2}:\\d{2}:\\d{2}$|^\\d{2}:\\d{2}$", item)
+    
+    if len(rx) > 0: return True
+
+    return False
+
+#------------------------------------------------------------------------------
+def isDate(item):
+    
+    return isTime(item) or ddmmyyyy(item) or yyyymmdd(item)
+
+#------------------------------------------------------------------------------
+def ddmmyyyy(item):
+    
+    s = re.sub(r'[ .\-/]', '', item)
+    
+    # Ak neobsahuje aspon 6 cislic vratim 0
+    if len(s) < 6: return False
+
+    # Rozdelim string na zlozky
+    try:
+        dd = int(s[0:2])
+        mm = int(s[2:4])
+        
+    except: return False
+    
+    # Test na datum
+    try:
+        if len(s) > 7: yy = int(s[4:8])
+        else         : yy = int(s[4:6])
+            
+        d = date(yy, mm, dd)
+        return True
+    
+    except: return False
+
+#------------------------------------------------------------------------------
+def yyyymmdd(item):
+    
+    s = re.sub(r'[ .\-/]', '', item)
+    
+    # Ak neobsahuje aspon 8 cislic vratim 0
+    if len(s) < 8: return False
+
+    # Test na datum
+    try:
+        yy = int(s[0:4])
+        if (yy<1900) or (yy>2200): return False
+        
+        mm = int(s[4:6])
+        dd = int(s[6:8])
+        
+        d = date(yy, mm, dd)
+        return True
+    
+    except: return False
+
+#------------------------------------------------------------------------------
+def yy5mdd(s):
+    
+    # Ak neobsahuje aspon 6 cislic vratim 0
+    if len(s) < 6: return False
+
+    # Rozdelim string na zlozky
+    try:
+        yy = int(s[0:2])
+        mm = int(s[2:4])
+        dd = int(s[4:6])
+        
+    except: return False
+    
+    # Test na chlapcov
+    try:
+        d = date(yy, mm, dd)
+        return True
+    except: pass
+    
+    # Test na dievcata
+    try:
+        d = date(yy, mm-50, dd)
+        return True
+    except: pass
+    
+    # Neobsahuje datum
+    return False
+
+#------------------------------------------------------------------------------
+# String profiling
+#------------------------------------------------------------------------------
+def getMask(s):
+    
+    toRet = s
+
+    if re.search(r'[A-ZĽĹŠČŤŽÝÁÍÉÚŇ]',    toRet): toRet = re.sub(r'[A-ZĽĹŠČŤŽÝÁÍÉÚŇ]',       'C', toRet)
+    if re.search(r'[a-zľĺščťžýáäíéúňô]',  toRet): toRet = re.sub(r'[a-zľĺščťžýáäíéúňô]',     'c', toRet)
+    if re.search(r'\d',                   toRet): toRet = re.sub(r'\d',                      'N', toRet)
+    if re.search(r'\s',                   toRet): toRet = re.sub(r'\s+?',                    ' ', toRet)
+        
+    if re.search(r'[`~#$%^&\\\'\"/?§;:]', toRet): toRet = re.sub(r'[`~#$%^&\\\'\"/?§;:]+?',  '^', toRet)
+        
+    return toRet
+        
+#------------------------------------------------------------------------------
+def strXor(s1, s2):
+    
+    if len(s1) > len(s2):
+        text = s1
+        key  = s2
+        
+    else:
+        text = s2
+        key  = s1
+        
+    lenKey = len(key)
+    pos    = 0
+    
+    toRet = ''
+    
+    for ch in text:
+        
+        n1 = ord(ch)
+        n2 = ord(key[pos%lenKey])
+        
+        toRet = toRet + chr(n1^n2)
+        
+        pos += 1
+        
+    return toRet
+    
+#------------------------------------------------------------------------------
+def strFibbMod(s, state=382362):
+    
+    toRet = []
+    sLen  = len(s)
+    
+    for ch in s:
+        state = (state + ord(ch)) % sLen        
+        toRet.append(state)
+    
+    return toRet
+
+#------------------------------------------------------------------------------
+def strOrder(s, order):
+    
+    toRet = ''
+
+    for pos in order: toRet += s[pos] 
+
+    return toRet
+
+#------------------------------------------------------------------------------
+def strChsum(s):
+    
+    toRet = 0
+    sLen  = len(s)
+    
+    for ch in s: toRet = (toRet + ord(ch)) % sLen
+    
+    return toRet
+
+#------------------------------------------------------------------------------
+def strSalted(s, state=None):
+    
+    if state is None: state = strChsum(s)
+    
+    order = strFibbMod(s, state)
+    return strOrder(s, order)
+
+#------------------------------------------------------------------------------
+def strWatermark(s1, s2):
+    
+    toRet = ''
+    lenS2 = len(s2)
+    
+    p1 = 0
+    
+    for ch in s1:
+      
+        n1 = ord(ch)     # Pozicia v s1
+        p2 = p1%lenS2    # Pozicia v s2
+        
+        if 3*(n1%(p2+1)) > lenS2: toRet += s2[p2]
+        else                    : toRet += ch
+        
+        p1 += 1
+
+    return toRet
 
 #==============================================================================
 # Bracket structure Tools
@@ -163,290 +466,6 @@ def braSplit(txt, bra='(', ket=')', delims=',', totPos=0):
     #--------------------------------------------------------------------------
     return toRet        
 
-#------------------------------------------------------------------------------
-def aliasSplit(txt):
-    
-    txt = txt.strip()
-    txt = shrink(txt)
-    
-    #--------------------------------------------------------------------------
-    # Zistim ci txt obsahuje ' AS ' 
-    #--------------------------------------------------------------------------
-    rx = txt.split(' AS ')
-            
-    #--------------------------------------------------------------------------
-    # Neobsahuje ' AS '
-    #--------------------------------------------------------------------------
-    if len(rx) == 1:
-                
-        #----------------------------------------------------------------------
-        # Zistim ci txt obsahuje ' ', t.j. alias
-        #----------------------------------------------------------------------
-        sx = txt.split(' ')
-                
-        #----------------------------------------------------------------------
-        # Neobsahuje alias
-        #----------------------------------------------------------------------
-        if len(sx) == 1:
-            stat = sx[0].strip()
-            alis = None
-                    
-        #----------------------------------------------------------------------
-        # Obsahuje alias
-        #----------------------------------------------------------------------
-        else:
-            stat = ' '.join(sx[0:-1]).strip()
-            alis = sx[-1].strip()
-                
-    #--------------------------------------------------------------------------
-    # Obsahuje ' AS '
-    #--------------------------------------------------------------------------
-    else:
-        stat = ' '.join(rx[0:-1]).strip()
-        alis = rx[-1].strip()
-                
-    #--------------------------------------------------------------------------
-    return (stat, alis)
-
-#------------------------------------------------------------------------------
-def shrink(txt, toShrink=' '):
-    
-    toRet = txt
-    
-    #--------------------------------------------------------------------------
-    # Ziskam vsetky suvisle vyskyty toShrink texte a zmenim na jeden toShrink
-    #--------------------------------------------------------------------------
-    ss = toShrink + '{2,}'
-      
-    if re.search(ss, txt): toRet = re.sub(ss, toShrink, txt)
-    
-    #--------------------------------------------------------------------------
-    return toRet
-        
-#==============================================================================
-# String value tests
-#------------------------------------------------------------------------------
-def isNumber(s):
-    
-    rx = re.findall(r'[^\d.-]', s)
-    if len(rx) > 0: return False
-    
-    try:
-        float(s)
-        return True
-    
-    except ValueError:
-        return False
-    
-#------------------------------------------------------------------------------
-def isRc(item):
-    
-    s = re.sub(r'[ .\-/]', '', item)
-    if (len(s)<9) or (len(s)>10): return 0
-    
-    return yy5mdd(s) and mod11(s)
-
-#------------------------------------------------------------------------------
-def mod11(item):
-
-    s = re.sub(r'[ .\-/]', '', item)
-
-    try   : i = int(s)
-    except: return False
-    
-    # Ak je delitelne 11 vratim 1 inak 0
-    if i%11 == 0: return True
-    else        : return False
-
-#------------------------------------------------------------------------------
-def isTime(item):
-    
-    rx = re.findall("^\\d{2}[ .:-][A-Z]{3}[ .:-]\\d{2}[ .:-]\\d{2}[ .:-]\\d{2}[ .:-]\\d{2}[.]\\d{6} [AP]M|^\\d{4}[ .:-]\\d{2}[ .:-]\\d{2}[ .:-]\\d{2}[ .:-]\\d{2}[ .:-]\\d{2}|^\\d{2}[ .:-]\\d{2}[ .:-]\\d{2}[ .:-]\\d{2}[ .:-]\\d{2}[ .:-]\\d{2}|^\\d{2}[.:-]\\d{2}[.:-]\\d{2}\\s*$|^\\d{2}:\\d{2}:\\d{2}$|^\\d{2}:\\d{2}$", item)
-    
-    if len(rx) > 0: return True
-
-    return False
-
-#------------------------------------------------------------------------------
-def isDate(item):
-    
-    return isTime(item) or ddmmyyyy(item) or yyyymmdd(item)
-
-#------------------------------------------------------------------------------
-def ddmmyyyy(item):
-    
-    s = re.sub(r'[ .\-/]', '', item)
-    
-    # Ak neobsahuje aspon 6 cislic vratim 0
-    if len(s) < 6: return False
-
-    # Rozdelim string na zlozky
-    try:
-        dd = int(s[0:2])
-        mm = int(s[2:4])
-        
-    except: return False
-    
-    # Test na datum
-    try:
-        if len(s) > 7: yy = int(s[4:8])
-        else         : yy = int(s[4:6])
-            
-        d = date(yy, mm, dd)
-        return True
-    
-    except: return False
-
-#------------------------------------------------------------------------------
-def yyyymmdd(item):
-    
-    s = re.sub(r'[ .\-/]', '', item)
-    
-    # Ak neobsahuje aspon 8 cislic vratim 0
-    if len(s) < 8: return False
-
-    # Test na datum
-    try:
-        yy = int(s[0:4])
-        if (yy<1900) or (yy>2200): return False
-        
-        mm = int(s[4:6])
-        dd = int(s[6:8])
-        
-        d = date(yy, mm, dd)
-        return True
-    
-    except: return False
-
-#------------------------------------------------------------------------------
-def yy5mdd(s):
-    
-    # Ak neobsahuje aspon 6 cislic vratim 0
-    if len(s) < 6: return False
-
-    # Rozdelim string na zlozky
-    try:
-        yy = int(s[0:2])
-        mm = int(s[2:4])
-        dd = int(s[4:6])
-        
-    except: return False
-    
-    # Test na chlapcov
-    try:
-        d = date(yy, mm, dd)
-        return True
-    except: pass
-    
-    # Test na dievcata
-    try:
-        d = date(yy, mm-50, dd)
-        return True
-    except: pass
-    
-    # Neobsahuje datum
-    return False
-
-#------------------------------------------------------------------------------
-def getMask(s):
-    
-    toRet = s
-
-    if re.search(r'[A-ZĽĹŠČŤŽÝÁÍÉÚŇ]',    toRet): toRet = re.sub(r'[A-ZĽĹŠČŤŽÝÁÍÉÚŇ]',       'C', toRet)
-    if re.search(r'[a-zľĺščťžýáäíéúňô]',  toRet): toRet = re.sub(r'[a-zľĺščťžýáäíéúňô]',     'c', toRet)
-    if re.search(r'\d',                   toRet): toRet = re.sub(r'\d',                      'N', toRet)
-    if re.search(r'\s',                   toRet): toRet = re.sub(r'\s+?',                    ' ', toRet)
-        
-    if re.search(r'[`~#$%^&\\\'\"/?§;:]', toRet): toRet = re.sub(r'[`~#$%^&\\\'\"/?§;:]+?',  '^', toRet)
-        
-    return toRet
-        
-#------------------------------------------------------------------------------
-def strXor(s1, s2):
-    
-    if len(s1) > len(s2):
-        text = s1
-        key  = s2
-        
-    else:
-        text = s2
-        key  = s1
-        
-    lenKey = len(key)
-    pos    = 0
-    
-    toRet = ''
-    
-    for ch in text:
-        
-        n1 = ord(ch)
-        n2 = ord(key[pos%lenKey])
-        
-        toRet = toRet + chr(n1^n2)
-        
-        pos += 1
-        
-    return toRet
-    
-#------------------------------------------------------------------------------
-def strFibbMod(s, state=382362):
-    
-    toRet = []
-    sLen  = len(s)
-    
-    for ch in s:
-        state = (state + ord(ch)) % sLen        
-        toRet.append(state)
-    
-    return toRet
-
-#------------------------------------------------------------------------------
-def strOrder(s, order):
-    
-    toRet = ''
-
-    for pos in order: toRet += s[pos] 
-
-    return toRet
-
-#------------------------------------------------------------------------------
-def strChsum(s):
-    
-    toRet = 0
-    sLen  = len(s)
-    
-    for ch in s: toRet = (toRet + ord(ch)) % sLen
-    
-    return toRet
-
-#------------------------------------------------------------------------------
-def strSalted(s, state=None):
-    
-    if state is None: state = strChsum(s)
-    
-    order = strFibbMod(s, state)
-    return strOrder(s, order)
-
-#------------------------------------------------------------------------------
-def strWatermark(s1, s2):
-    
-    toRet = ''
-    lenS2 = len(s2)
-    
-    p1 = 0
-    
-    for ch in s1:
-      
-        n1 = ord(ch)     # Pozicia v s1
-        p2 = p1%lenS2    # Pozicia v s2
-        
-        if 3*(n1%(p2+1)) > lenS2: toRet += s2[p2]
-        else                    : toRet += ch
-        
-        p1 += 1
-
-    return toRet
-    
 #==============================================================================
 # Persistency Tools
 #------------------------------------------------------------------------------

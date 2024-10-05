@@ -1,17 +1,19 @@
 #==============================================================================
 # Siqo common library
 #------------------------------------------------------------------------------
-from   datetime import date, datetime
-import pytz
 import os
+
+from   datetime import date, datetime
+
+from   siqolib.general  import _TIME_ZONE
 
 #==============================================================================
 # package's constants
 #------------------------------------------------------------------------------
-_VER         = '1.25'
+_VER          = '1.26'
 
-_INDENT_START =   1
-_INDENT_MAX   = 100
+_INDENT_START =     1
+_INDENT_MAX   =   100
 
 _MAX_LINES    = 10000    # Maximalny pocet riadkov v pamati
 _CUT_LINES    =   100    # Po presiahnuti _MAX_LINES zostane _CUT_LINES
@@ -19,8 +21,6 @@ _CUT_LINES    =   100    # Po presiahnuti _MAX_LINES zostane _CUT_LINES
 _UPPER        = '\u250C'
 _MID          = '\u2502'
 _LOWER        = '\u2514'
-
-_TIME_ZONE    = pytz.timezone('CET')   # Timezone in which Journal runs
 
 #==============================================================================
 # package's tools
