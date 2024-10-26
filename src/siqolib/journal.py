@@ -2,15 +2,13 @@
 # Siqo common library
 #------------------------------------------------------------------------------
 import os
-
-from   datetime import date, datetime
-
+from   datetime         import date, datetime
 from   siqolib.general  import _TIME_ZONE
 
 #==============================================================================
 # package's constants
 #------------------------------------------------------------------------------
-_VER          = '1.26'
+_VER          = '1.27'
 
 _INDENT_START =     1
 _INDENT_MAX   =   100
@@ -44,6 +42,7 @@ class SiqoJournal:
         self.printLine  = printLine     # Ci sa ma journal vypisovat na obrazovku
         self.createFile = createFile    # Ci sa ma journal zapisovat do suboru
         self.folder     = folder        # Folder BEZ koncoveho lomitka, do ktoreho sa bude zapisovat journal na disk
+        self.extFunc    = None          # Funkcia ktora sa zavola pri kazdom volani journal.M() signatura fcia(line)
         
         self.indent     = _INDENT_START # Aktualne vnorenie
         self.showAll    = False         # Overrride debugLevel. Ak True, bude sa vypisovat VSETKO
@@ -91,6 +90,11 @@ class SiqoJournal:
         if line and self.printLine: print(line)
 
         #----------------------------------------------------------------------
+        # Vystup do externej funkcie
+        #----------------------------------------------------------------------
+        if (self.extFunc is not None) and (line): self.extFunc(line)
+
+         #----------------------------------------------------------------------
         # Vystup do zoznamu v pamati a kontrola pretecenia
         #----------------------------------------------------------------------
         if line: 
