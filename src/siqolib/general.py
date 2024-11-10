@@ -13,7 +13,7 @@ from   datetime        import date
 #==============================================================================
 # package's constants
 #------------------------------------------------------------------------------
-_VER      = '1.16'
+_VER      = '1.17'
 
 #==============================================================================
 # package's variables
@@ -635,7 +635,7 @@ def dictPrint(dct, indent=' ', depth=0):
         for val in dct:
             
             if (type(val) in {dict, list}): dictPrint(val, indent, depth+1)
-            else: print(f'{indent}[{cnt:10}]{val}')
+            else: print(f'{indent}<{cnt:16}>{val}')
             
             cnt += 1
             
@@ -648,10 +648,10 @@ def dictPrint(dct, indent=' ', depth=0):
             
             if (type(val) in {dict, list}): 
                 
-                print(f'{indent}[{key}]')
+                print(f'{indent}[{key}]:')
                 dictPrint(val, indent, depth+1)
                 
-            else: print(f'{indent}{key:10}{val}')
+            else: print(f'{indent}{key:16}:{val}')
 
 #------------------------------------------------------------------------------
 def dictLen(dct, left=99):
