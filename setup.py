@@ -49,8 +49,8 @@ def publish_artifacts() -> None:
             shutil.rmtree("./build/")
         if os.path.exists("./dist/"):
             shutil.rmtree("./dist/")
-        if os.path.exists("./src/dw_gdpr.egg-info/"):
-            shutil.rmtree("./src/dw_gdpr.egg-info/")
+        if os.path.exists("./src/egg-info/"):
+            shutil.rmtree("./src/egg-info/")
 
         # ------------------------------------------------------------------------------
         # Publish artifacts
