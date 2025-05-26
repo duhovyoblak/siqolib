@@ -7,7 +7,7 @@ from   tkinter                import ttk, scrolledtext,simpledialog , messagebox
 #==============================================================================
 # package's constants
 #------------------------------------------------------------------------------
-_VER   = '1.09'
+_VER   = '1.10'
 
 #==============================================================================
 # package's variables
@@ -69,11 +69,11 @@ class SiqoMessage(tk.Toplevel):
 #==============================================================================
 # Ask dialogs
 #------------------------------------------------------------------------------
-def askInt(container, title="Integer dialog", prompt="Zadaj celé číslo:", min=None, max=None):
+def askInt(container, title="Integer dialog", prompt="Zadaj celé číslo:", initialvalue=0, min=None, max=None):
 
     while True:
 
-        result = simpledialog.askstring(title, prompt, parent=container)
+        result = simpledialog.askstring(title, prompt, initialvalue=str(initialvalue), parent=container)
 
         if result is None:
             return None  # Používateľ stlačil Cancel
@@ -94,11 +94,11 @@ def askInt(container, title="Integer dialog", prompt="Zadaj celé číslo:", min
             messagebox.showerror("Chyba", "Zadaj platné celé číslo!", parent=container)
 
 #------------------------------------------------------------------------------
-def askReal(container, title="Real number dialog", prompt="Zadaj číslo:", min=None, max=None):
+def askReal(container, title="Real number dialog", prompt="Zadaj číslo:", initialvalue=0, min=None, max=None):
 
     while True:
 
-        result = simpledialog.askstring(title, prompt, parent=container)
+        result = simpledialog.askstring(title, prompt, initialvalue=str(initialvalue), parent=container)
 
         if result is None:
             return None  # Používateľ stlačil Cancel
@@ -373,7 +373,7 @@ if __name__ == "__main__":
 
     # Pridanie buttonu na vyvolanie askInt
     def onAskInt():
-        value = askInt(win, title="Zadaj číslo", prompt="Zadaj celé číslo:")
+        value = askInt(win, title="Zadaj číslo", prompt="Zadaj celé číslo:", initialvalue=7, min=1, max=10)
         print(f"Zadané číslo: {value}")
 
     btn_ask_int = tk.Button(win, text="Zadaj celé číslo", command=onAskInt)
