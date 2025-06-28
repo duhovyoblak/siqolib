@@ -2,11 +2,12 @@
 # Siqo tkInter library
 #------------------------------------------------------------------------------
 import tkinter                as tk
-from   tkinter                import (ttk, scrolledtext, messagebox)
+from   tkinter                import ttk, scrolledtext,simpledialog , messagebox
 
 #==============================================================================
 # package's constants
 #------------------------------------------------------------------------------
+_VER   = '1.10'
 
 #==============================================================================
 # package's variables
@@ -65,6 +66,59 @@ class SiqoMessage(tk.Toplevel):
         
         self.destroy()    
         
+#==============================================================================
+# Ask dialogs
+#------------------------------------------------------------------------------
+def askInt(container, title="Integer dialog", prompt="Zadaj celé číslo:", initialvalue=0, min=None, max=None):
+
+    while True:
+
+        result = simpledialog.askstring(title, prompt, initialvalue=str(initialvalue), parent=container)
+
+        if result is None:
+            return None  # Používateľ stlačil Cancel
+        try:
+            value = int(result)
+
+            if min is not None and value < min:
+                messagebox.showerror("Chyba", f"Zadaj celé číslo väčšie alebo rovné {min}!", parent=container)
+                continue  # Opakovať, ak je hodnota menšia ako minimum
+          
+            if max is not None and value > max:
+                messagebox.showerror("Chyba", f"Zadaj celé číslo menšie alebo rovné {max}!", parent=container)
+                continue
+
+            return value
+
+        except ValueError:
+            messagebox.showerror("Chyba", "Zadaj platné celé číslo!", parent=container)
+
+#------------------------------------------------------------------------------
+def askReal(container, title="Real number dialog", prompt="Zadaj číslo:", initialvalue=0, min=None, max=None):
+
+    while True:
+
+        result = simpledialog.askstring(title, prompt, initialvalue=str(initialvalue), parent=container)
+
+        if result is None:
+            return None  # Používateľ stlačil Cancel
+        
+        try:
+            value = float(result)
+
+            if min is not None and value < min:
+                messagebox.showerror("Chyba", f"Zadaj číslo väčšie alebo rovné {min}!", parent=container)
+                continue  # Opakovať, ak je hodnota menšia ako minimum
+          
+            if max is not None and value > max:
+                messagebox.showerror("Chyba", f"Zadaj číslo menšie alebo rovné {max}!", parent=container)
+                continue
+
+            return value
+
+        except ValueError:
+            messagebox.showerror("Chyba", "Zadaj platné číslo!", parent=container)
+
 #==============================================================================
 # Class SiqoEntry
 #------------------------------------------------------------------------------
@@ -292,7 +346,43 @@ class SiqoLogin(tk.Toplevel):
 #==============================================================================
 #   Inicializacia kniznice
 #------------------------------------------------------------------------------
-print('SIQO message library ver 1.08')
+print(f'SIQO message library ver {_VER}')
+
+
+if __name__ == "__main__":
+    
+    
+    from   siqolib.journal          import SiqoJournal
+
+    journal = SiqoJournal('InfoMarixGui component test', debug=4)
+
+    #--------------------------------------------------------------------------
+    # Test of the InfoMarixGui class
+    #--------------------------------------------------------------------------
+    journal.I('Test of InfoMarixGui class')
+
+    win = tk.Tk()
+    win.configure(bg='silver', highlightthickness=2, highlightcolor='green')
+    win.title('Test of siqo_message class')
+    win.minsize(width=600, height=300)
+    win.config(highlightbackground = "green", highlightcolor= "green")
+
+    #--------------------------------------------------------------------------
+    # Zaciatok testu 
+    #--------------------------------------------------------------------------
+
+    # Pridanie buttonu na vyvolanie askInt
+    def onAskInt():
+        value = askInt(win, title="Zadaj číslo", prompt="Zadaj celé číslo:", initialvalue=7, min=1, max=10)
+        print(f"Zadané číslo: {value}")
+
+    btn_ask_int = tk.Button(win, text="Zadaj celé číslo", command=onAskInt)
+    btn_ask_int.pack(pady=20)
+
+
+    win.mainloop()
+
+    journal.O()
 
 #==============================================================================
 #                              END OF FILE
