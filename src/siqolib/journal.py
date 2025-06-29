@@ -5,7 +5,7 @@ from   datetime import date, datetime
 import pytz
 import os
 from   datetime         import date, datetime
-from   siqolib.general  import _TIME_ZONE
+from   general          import _TIME_ZONE
 
 #==============================================================================
 # package's constants
@@ -40,99 +40,7 @@ class StopWatchConf:
     #--------------------------------------------------------------------------
     locJournal = None
 
-
 #==============================================================================
-# Alarm stopwatch decorator
-#------------------------------------------------------------------------------
-def stopWatch(function):
-    "Measures and print time elapsed by calling the function"
-
-    #--------------------------------------------------------------------------
-    # Interna wrapper funkcia
-    #--------------------------------------------------------------------------
-    @functools.wraps(function)
-    def wrapper(*args, **kwargs):
-
-        #----------------------------------------------------------------------
-        # Before decorated function
-        #----------------------------------------------------------------------
-        start = datetime.now()
-
-        #----------------------------------------------------------------------
-        # Actual DB call function
-        #----------------------------------------------------------------------
-        resp = function(*args, **kwargs)
-
-        #----------------------------------------------------------------------
-        # After decorated function
-        #----------------------------------------------------------------------
-        stop = datetime.now()
-        dur  = stop - start
-
-        if dur.seconds > _TIME_WARNING:
-
-            if StopWatchConf.locJournal is None:
-
-                line = f"{stop.strftime('%Y-%m-%d %H:%M:%S')}> {function.__name__}() took {dur.seconds} seconds to complete TIME WARNING"
-                print(line)
-
-            else:
-                StopWatchConf.locJournal.M(f"{function.__name__}() took {dur.seconds} seconds to complete TIME WARNING", True)
-
-        #----------------------------------------------------------------------
-        return resp
-
-    #--------------------------------------------------------------------------
-    # Koniec internej wrapper fcie
-    #--------------------------------------------------------------------------
-    return wrapper
-
-#------------------------------------------------------------------------------
-def asyncStopWatch(function):
-    "Measures and print time elapsed by calling the function"
-
-    #--------------------------------------------------------------------------
-    # Interna wrapper funkcia
-    #--------------------------------------------------------------------------
-    @functools.wraps(function)
-    async def wrapper(*args, **kwargs):
-
-        #----------------------------------------------------------------------
-        # Before decorated function
-        #----------------------------------------------------------------------
-        start = datetime.now()
-
-        #----------------------------------------------------------------------
-        # Actual DB call function
-        #----------------------------------------------------------------------
-        resp = await function(*args, **kwargs)
-
-        #----------------------------------------------------------------------
-        # After decorated function
-        #----------------------------------------------------------------------
-        stop = datetime.now()
-        dur  = stop - start
-
-        if dur.seconds > _TIME_WARNING:
-
-            if StopWatchConf.locJournal is None:
-
-                line = f"{stop.strftime('%Y-%m-%d %H:%M:%S')}> {function.__name__}() took {dur.seconds} seconds to complete TIME WARNING"
-                print(line)
-
-            else:
-                StopWatchConf.locJournal.M(f"{function.__name__}() took {dur.seconds} seconds to complete TIME WARNING", True)
-
-        #----------------------------------------------------------------------
-        return resp
-
-    #--------------------------------------------------------------------------
-    # Koniec internej wrapper fcie
-    #--------------------------------------------------------------------------
-    return wrapper
-
-#==============================================================================
-
 # Journal
 #------------------------------------------------------------------------------
 class SiqoJournal:

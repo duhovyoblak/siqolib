@@ -12,7 +12,7 @@ DIR_CURRENT = os.path.abspath(os.path.dirname(__file__))
 
 DELIMITER_VERSION = '.'
 MAJOR_VERSION = '1'
-MINOR_VERSION = '2'
+MINOR_VERSION = '3'
 PATCH_VERSION = '2'
 
 PACKAGE_NAME             = 'siqolib'
@@ -89,3 +89,7 @@ def publish_artifacts() -> None:
 # ==============================================================================
 if __name__ == "__main__":
     publish_artifacts()
+
+#==============================================================================
+#                              END OF FILE
+#------------------------------------------------------------------------------

@@ -1,9 +1,7 @@
-"""
 #==============================================================================
 # Siqo tkInter library
 #------------------------------------------------------------------------------
-2024-08-27 - GHH - SiqoTreeview class prerobena na Frame = Treeview + 2x Scrolbar
-"""
+
 import tkinter                as tk
 #from   tkinter                import (ttk, font, scrolledtext, messagebox)
 from   tkinter                import (ttk, font, messagebox)
@@ -11,7 +9,7 @@ from   tkinter                import (ttk, font, messagebox)
 #==============================================================================
 # package's constants
 #------------------------------------------------------------------------------
-_VER         = '1.21'
+_VER         = '1.22'
 
 _ASC         = 'ᐃ'       # Sorted ascending sign
 _DSC         = '▼'       # Sorted descending sign

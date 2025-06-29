@@ -1,22 +1,12 @@
 #==============================================================================
 # Siqo common library
 #------------------------------------------------------------------------------
-import os
 import functools
 import logging
 import inspect
-from   datetime                      import datetime
+from   datetime               import datetime
 
-deployment = os.getenv("monDeploy", "local")
-
-if deployment.startswith("edg-") or deployment.startswith("aws-"):
-
-    from  .siqo_singleton              import SingletonMeta
-    from  .siqo_general                import TIME_ZONE
-
-else:
-    from  siqo_singleton              import SingletonMeta
-    from  siqo_general                import TIME_ZONE
+from   singleton              import SingletonMeta
 
 #==============================================================================
 # package's constants
