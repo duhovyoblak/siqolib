@@ -21,12 +21,10 @@ class SiqoMessage(tk.Toplevel):
     #==========================================================================
     # Constructor & utilities
     #--------------------------------------------------------------------------
-    def __init__(self, journal, name, text, wpix=500, hpix=500, lpix=300, tpix=200):
+    def __init__(self, name, text, wpix=500, hpix=500, lpix=300, tpix=200):
         "Call constructor of SiqoMessage and initialise it"
 
-        self.journal = journal
-        self.name    = name
-        self.journal.I(f"tk.{self.name}.init:")
+        self.name = name
 
         #----------------------------------------------------------------------
         # Inicializacia okna
@@ -57,8 +55,8 @@ class SiqoMessage(tk.Toplevel):
         #----------------------------------------------------------------------
         for row in text: 
             st.insert(tk.END, row + '\n')
-        
-        self.journal.O()
+
+        #----------------------------------------------------------------------
         
     #--------------------------------------------------------------------------
     def close(self, event=None):
@@ -350,17 +348,14 @@ print(f'SIQO message library ver {_VER}')
 
 
 if __name__ == "__main__":
-    
-    
-    from   siqolib.journal          import SiqoJournal
 
-    journal = SiqoJournal('InfoMarixGui component test', debug=4)
 
+    msg = SiqoMessage('Test', ['This is a test message.', 'You can add multiple lines.'])
+    msg.mainloop()
+    
     #--------------------------------------------------------------------------
     # Test of the InfoMarixGui class
     #--------------------------------------------------------------------------
-    journal.I('Test of InfoMarixGui class')
-
     win = tk.Tk()
     win.configure(bg='silver', highlightthickness=2, highlightcolor='green')
     win.title('Test of siqo_message class')
@@ -370,7 +365,6 @@ if __name__ == "__main__":
     #--------------------------------------------------------------------------
     # Zaciatok testu 
     #--------------------------------------------------------------------------
-
     # Pridanie buttonu na vyvolanie askInt
     def onAskInt():
         value = askInt(win, title="Zadaj číslo", prompt="Zadaj celé číslo:", initialvalue=7, min=1, max=10)
@@ -382,7 +376,6 @@ if __name__ == "__main__":
 
     win.mainloop()
 
-    journal.O()
 
 #==============================================================================
 #                              END OF FILE
