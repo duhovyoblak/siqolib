@@ -216,10 +216,8 @@ class SiqoLogger(metaclass=SingletonMeta):
         self.warning(f'{self.name}.changeName: Logger name was changed to {name}')
 
     #--------------------------------------------------------------------------
-    def _callerInfo(self, depth=None):
+    def _callerInfo(self):
         "Get the filename and line number of the caller function"
-
-        if depth is None: depth = self.frameDepth
 
         # [0] je táto funkcia, [1] je logger, [2] je volajúci
         currFrame   = inspect.currentframe()
@@ -228,11 +226,11 @@ class SiqoLogger(metaclass=SingletonMeta):
         #----------------------------------------------------------------------
         # Bezpečne zisti volajúceho, ak stack nie je dosť hlboký
         #----------------------------------------------------------------------
-        if   len(outerFrames) > depth: callerFrame = outerFrames[depth]
-        elif len(outerFrames) > 2    : callerFrame = outerFrames[2]
-        elif len(outerFrames) > 1    : callerFrame = outerFrames[1]
-        elif len(outerFrames) > 0    : callerFrame = outerFrames[0]
-        else                         : callerFrame = currFrame
+        if   len(outerFrames) > self.frameDepth: callerFrame = outerFrames[self.frameDepth]
+        elif len(outerFrames) > 2              : callerFrame = outerFrames[2]
+        elif len(outerFrames) > 1              : callerFrame = outerFrames[1]
+        elif len(outerFrames) > 0              : callerFrame = outerFrames[0]
+        else                                   : callerFrame = currFrame
 
         #----------------------------------------------------------------------
         # Získam názov súboru a číslo riadku volajúcej funkcie
@@ -333,7 +331,7 @@ class SiqoLogger(metaclass=SingletonMeta):
         #----------------------------------------------------------------------
 
         pyFile, lineno = self._callerInfo()
-        self._logger.debug(message, stacklevel=3)
+        self._logger.debug(message, stacklevel=self.frameDepth)
 
         record = self._logger.makeRecord(self._logger.name, logging.DEBUG, pyFile, lineno, message, None, None )
         self._addRecord(record)
@@ -349,7 +347,7 @@ class SiqoLogger(metaclass=SingletonMeta):
         #----------------------------------------------------------------------
 
         pyFile, lineno = self._callerInfo()
-        self._logger.info(message, stacklevel=3)
+        self._logger.info(message, stacklevel=self.frameDepth)
 
         record = self._logger.makeRecord(self._logger.name, logging.INFO, pyFile, lineno, message, None, None )
         self._addRecord(record)
@@ -366,7 +364,7 @@ class SiqoLogger(metaclass=SingletonMeta):
 
         message = f'{BColors.WARNING}{message}{BColors.END_C}'
         pyFile, lineno = self._callerInfo()
-        self._logger.warning(message, stacklevel=3)
+        self._logger.warning(message, stacklevel=self.frameDepth)
 
         record = self._logger.makeRecord(self._logger.name, logging.WARNING, pyFile, lineno, message, None, None )
         self._addRecord(record)
@@ -383,7 +381,7 @@ class SiqoLogger(metaclass=SingletonMeta):
 
         message = f'{BColors.ERROR}{message}{BColors.END_C}'
         pyFile, lineno = self._callerInfo()
-        self._logger.error(message, stacklevel=3)
+        self._logger.error(message, stacklevel=self.frameDepth)
 
         record = self._logger.makeRecord(self._logger.name, logging.ERROR, pyFile, lineno, message, None, None )
         self._addRecord(record)
@@ -400,7 +398,7 @@ class SiqoLogger(metaclass=SingletonMeta):
 
         message = f'{BColors.CRITICAL}{message}{BColors.END_C}'
         pyFile, lineno = self._callerInfo()
-        self._logger.critical(message, stacklevel=3)
+        self._logger.critical(message, stacklevel=self.frameDepth)
 
         record = self._logger.makeRecord(self._logger.name, logging.CRITICAL, pyFile, lineno, message, None, None )
         self._addRecord(record)
@@ -417,7 +415,7 @@ class SiqoLogger(metaclass=SingletonMeta):
 
         message = f'{BColors.OK_GREEN}{message}{BColors.END_C}'
         pyFile, lineno = self._callerInfo()
-        self._logger.log(_LOGGER_AUDIT, message, stacklevel=3)
+        self._logger.log(_LOGGER_AUDIT, message, stacklevel=self.frameDepth)
 
         record = self._logger.makeRecord(self._logger.name, logging.AUDIT, pyFile, lineno, message, None, None )
         self._addRecord(record)
@@ -447,53 +445,26 @@ if __name__ == "__main__":
     logger1.error   ("This is an error message."  )
     logger1.critical("This is a critical message.")
     logger1.audit   ("This is an audit message.")
-
-    @stopWatch
-    def test_function():
-        import time
-        time.sleep(1)
-        return "Function completed"
-
-    print(test_function())
-
-    print("Logger messages:")
-    for msg in logger1.getLog(maxLines=40):
-        print(msg)
-
-    #--------------------------------------------------------------------------
-    # Znizim uroven logovania na ERROR
-    #--------------------------------------------------------------------------
-    print("\nChanging logger level to ERROR...")
     print()
 
-    logger1.setLevel('ERROR', 'unitTest')
-    logger1.info("This info message should not be logged due to the ERROR level setting.")
-
+    logger1.frameDepth = 0
+    print(logger1.frameDepth)
     logger1.debug   ("This is a debug message."   )
+    logger1.frameDepth = 1
+    print(logger1.frameDepth)
     logger1.info    ("This is an info message."   )
+    logger1.frameDepth = 2
+    print(logger1.frameDepth)
     logger1.warning ("This is a warning message." )
+    logger1.frameDepth = 3
+    print(logger1.frameDepth)
     logger1.error   ("This is an error message."  )
+    logger1.frameDepth = 4
+    print(logger1.frameDepth)
     logger1.critical("This is a critical message.")
-    logger1.audit   ("This is an audit message."  )
-
-    @stopWatch
-    def test_function():
-        import time
-        time.sleep(6)
-        return "Function completed"
-
-    print(test_function())
-
-    print(78 * '-')
-    for msg in logger1.getLog(maxLines=40):
-        print(msg)
-
-    print(78 * '-')
-    print("Time statistics:")
-    for func, times in logger1.getTimes().items():
-        print(f"{func}: {len(times)} calls")
-        for start, duration in times:
-            print(f"  Start: {start.strftime('%Y-%m-%d %H:%M:%S.%f')}, Duration: {duration:.2f} seconds")
+    logger1.frameDepth = 5
+    print(logger1.frameDepth)
+    logger1.audit   ("This is an audit message.")
 
 #==============================================================================
 #                              END OF FILE
