@@ -24,6 +24,8 @@ _LOGGER_FILE_MODE        = 'w'
 _LOGGER_FORMAT           = '%(asctime)s | %(levelname)-8s | %(process)6d | %(filename)22s:%(lineno)-5s | %(message)s'
 _LOGGER_AUDIT            = 90       # Custom log level for audit messages
 
+_FRAME_DEPTH             = 3        # How many frames to go back to find caller info
+
 _MAX_LINES               = 10000    # Maximalny pocet riadkov v pamati
 _CUT_LINES               =  9000    # Po presiahnuti _MAX_LINES zostane _CUT_LINES
 
@@ -173,6 +175,7 @@ class SiqoLogger(metaclass=SingletonMeta):
         # Vytvorim logger
         #----------------------------------------------------------------------
         self.name       = name                     # Názov loggera
+        self.frameDepth = _FRAME_DEPTH             # How many frames to go back to find caller info
         self.logFile    = logFile                  # Logovanie do súboru?
         self.fileName   = fileName                 # Názov súboru pre logovanie
         self.fileMode   = fileMode                 # Režim zápisu do súboru (napr. 'w' pre zápis, 'a' pre pripojenie)
@@ -183,7 +186,6 @@ class SiqoLogger(metaclass=SingletonMeta):
         #----------------------------------------------------------------------
         # Inicializujem logger
         #----------------------------------------------------------------------
-
         formater = logging.Formatter(_LOGGER_FORMAT)
 
         if logFile:
@@ -214,8 +216,10 @@ class SiqoLogger(metaclass=SingletonMeta):
         self.warning(f'{self.name}.changeName: Logger name was changed to {name}')
 
     #--------------------------------------------------------------------------
-    def _callerInfo(self, depth=2):
+    def _callerInfo(self, depth=None):
         "Get the filename and line number of the caller function"
+
+        if depth is None: depth = self.frameDepth
 
         # [0] je táto funkcia, [1] je logger, [2] je volajúci
         currFrame   = inspect.currentframe()
@@ -227,6 +231,7 @@ class SiqoLogger(metaclass=SingletonMeta):
         if   len(outerFrames) > depth: callerFrame = outerFrames[depth]
         elif len(outerFrames) > 2    : callerFrame = outerFrames[2]
         elif len(outerFrames) > 1    : callerFrame = outerFrames[1]
+        elif len(outerFrames) > 0    : callerFrame = outerFrames[0]
         else                         : callerFrame = currFrame
 
         #----------------------------------------------------------------------
