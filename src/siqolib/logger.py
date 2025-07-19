@@ -6,12 +6,13 @@ import logging
 import inspect
 from   datetime               import datetime
 
-from   singleton              import SingletonMeta
+from  singleton          import SingletonMeta
+from  general            import TIME_ZONE
 
 #==============================================================================
 # package's constants
 #------------------------------------------------------------------------------
-_VER = '1.1'
+_VER = '1.2'
 
 _LOGGER_NAME             = 'siqoLogger'
 _LOGGER_LEVEL            = 'WARNING'
@@ -40,6 +41,25 @@ logging.addLevelName(_LOGGER_AUDIT, 'AUDIT')
 logging.AUDIT = _LOGGER_AUDIT
 
 #==============================================================================
+# BColors for colored output in terminal
+# GHH - pravedpodobne zbytočne, pojde mozno preč, ak sa ukáže, že sa neda aplikovať do AWS logu
+#------------------------------------------------------------------------------
+class BColors:
+    """
+    Definition of colors for printing text.
+    """
+    HEADER    = '\033[95m'
+    OK_BLUE   = '\033[94m'
+    OK_CYAN   = '\033[96m'
+    OK_GREEN  = '\033[92m'
+    ERROR     = '\033[91m'
+    WARNING   = '\033[93m'
+    CRITICAL  = '\033[91m'
+    END_C     = '\033[0m'
+    BOLD      = '\033[1m'
+    UNDERLINE = '\033[4m'
+
+#==============================================================================
 # Alarm stopwatch decorator
 #------------------------------------------------------------------------------
 def stopWatch(function):
@@ -54,7 +74,7 @@ def stopWatch(function):
         #----------------------------------------------------------------------
         # Before decorated function
         #----------------------------------------------------------------------
-        start = datetime.now()
+        start = datetime.now(TIME_ZONE)
 
         #----------------------------------------------------------------------
         # Actual call function
@@ -64,7 +84,7 @@ def stopWatch(function):
         #----------------------------------------------------------------------
         # After decorated function
         #----------------------------------------------------------------------
-        stop = datetime.now()
+        stop = datetime.now(TIME_ZONE)
         dur  = stop - start
 
         #----------------------------------------------------------------------
@@ -98,7 +118,7 @@ def asyncStopWatch(function):
         #----------------------------------------------------------------------
         # Before decorated function
         #----------------------------------------------------------------------
-        start = datetime.now()
+        start = datetime.now(TIME_ZONE)
 
         #----------------------------------------------------------------------
         # Actual call function
@@ -108,7 +128,7 @@ def asyncStopWatch(function):
         #----------------------------------------------------------------------
         # After decorated function
         #----------------------------------------------------------------------
-        stop = datetime.now()
+        stop = datetime.now(TIME_ZONE)
         dur  = stop - start
 
         #----------------------------------------------------------------------
@@ -187,7 +207,14 @@ class SiqoLogger(metaclass=SingletonMeta):
         self.info(f'SiqoLogger initialized with file={logFile}, filename={fileName}, fileMode={fileMode}, console={logConsole}, level={level}')
 
     #--------------------------------------------------------------------------
-    def _callerInfo(self):
+    def changeName(self, name: str):
+        "Sets name of this object"
+
+        self.name = name
+        self.warning(f'{self.name}.changeName: Logger name was changed to {name}')
+
+    #--------------------------------------------------------------------------
+    def _callerInfo(self, depth=2):
         "Get the filename and line number of the caller function"
 
         # [0] je táto funkcia, [1] je logger, [2] je volajúci
@@ -197,17 +224,18 @@ class SiqoLogger(metaclass=SingletonMeta):
         #----------------------------------------------------------------------
         # Bezpečne zisti volajúceho, ak stack nie je dosť hlboký
         #----------------------------------------------------------------------
-        if   len(outerFrames) > 3: callerFrame = outerFrames[3]
-        elif len(outerFrames) > 1: callerFrame = outerFrames[1]
-        else                     : callerFrame = currFrame
+        if   len(outerFrames) > depth: callerFrame = outerFrames[depth]
+        elif len(outerFrames) > 2    : callerFrame = outerFrames[2]
+        elif len(outerFrames) > 1    : callerFrame = outerFrames[1]
+        else                         : callerFrame = currFrame
 
         #----------------------------------------------------------------------
         # Získam názov súboru a číslo riadku volajúcej funkcie
         #----------------------------------------------------------------------
-        fileName = callerFrame.filename
-        lineNo   = callerFrame.lineno
+        pyFile = callerFrame.filename
+        lineNo = callerFrame.lineno
 
-        return fileName, lineNo
+        return pyFile, lineNo
 
     #--------------------------------------------------------------------------
     def _addRecord(self, record: logging.LogRecord):
@@ -218,8 +246,6 @@ class SiqoLogger(metaclass=SingletonMeta):
         #----------------------------------------------------------------------
         # Vytvorim formatovany zaznam do zoznamu sprav
         #----------------------------------------------------------------------
-        # Struktura: [timestamp, level, filename:lineno, message]
-
         row = [col for col in formatted.split('|')]
         self._msgs.append(row)
 
@@ -249,7 +275,7 @@ class SiqoLogger(metaclass=SingletonMeta):
 
         #----------------------------------------------------------------------
         self._logger.setLevel(level)
-        self.audit(f"{self.name}.setLevel: Logger level was set to {self.getLevel()} by '{who}'")
+        self.warning(f"{self.name}.setLevel: Logger level was set to {self.getLevel()} by '{who}'")
 
     #--------------------------------------------------------------------------
     def getLevel(self, name=True):
@@ -301,10 +327,10 @@ class SiqoLogger(metaclass=SingletonMeta):
         if self._logger.level > logging.DEBUG: return
         #----------------------------------------------------------------------
 
-        filename, lineno = self._callerInfo()
+        pyFile, lineno = self._callerInfo()
         self._logger.debug(message, stacklevel=3)
 
-        record = self._logger.makeRecord(self._logger.name, logging.DEBUG, filename, lineno, message, None, None )
+        record = self._logger.makeRecord(self._logger.name, logging.DEBUG, pyFile, lineno, message, None, None )
         self._addRecord(record)
 
     #--------------------------------------------------------------------------
@@ -317,10 +343,10 @@ class SiqoLogger(metaclass=SingletonMeta):
         if self._logger.level > logging.INFO: return
         #----------------------------------------------------------------------
 
-        filename, lineno = self._callerInfo()
+        pyFile, lineno = self._callerInfo()
         self._logger.info(message, stacklevel=3)
 
-        record = self._logger.makeRecord(self._logger.name, logging.INFO,filename, lineno, message, None, None )
+        record = self._logger.makeRecord(self._logger.name, logging.INFO, pyFile, lineno, message, None, None )
         self._addRecord(record)
 
     #--------------------------------------------------------------------------
@@ -333,10 +359,11 @@ class SiqoLogger(metaclass=SingletonMeta):
         if self._logger.level > logging.WARNING: return
         #----------------------------------------------------------------------
 
-        filename, lineno = self._callerInfo()
+        message = f'{BColors.WARNING}{message}{BColors.END_C}'
+        pyFile, lineno = self._callerInfo()
         self._logger.warning(message, stacklevel=3)
 
-        record = self._logger.makeRecord(self._logger.name, logging.WARNING, filename, lineno, message, None, None )
+        record = self._logger.makeRecord(self._logger.name, logging.WARNING, pyFile, lineno, message, None, None )
         self._addRecord(record)
 
     #--------------------------------------------------------------------------
@@ -349,10 +376,11 @@ class SiqoLogger(metaclass=SingletonMeta):
         if self._logger.level > logging.ERROR: return
         #----------------------------------------------------------------------
 
-        filename, lineno = self._callerInfo()
+        message = f'{BColors.ERROR}{message}{BColors.END_C}'
+        pyFile, lineno = self._callerInfo()
         self._logger.error(message, stacklevel=3)
 
-        record = self._logger.makeRecord(self._logger.name, logging.ERROR, filename, lineno, message, None, None )
+        record = self._logger.makeRecord(self._logger.name, logging.ERROR, pyFile, lineno, message, None, None )
         self._addRecord(record)
 
     #--------------------------------------------------------------------------
@@ -365,10 +393,11 @@ class SiqoLogger(metaclass=SingletonMeta):
         if self._logger.level > logging.CRITICAL: return
         #----------------------------------------------------------------------
 
-        filename, lineno = self._callerInfo()
+        message = f'{BColors.CRITICAL}{message}{BColors.END_C}'
+        pyFile, lineno = self._callerInfo()
         self._logger.critical(message, stacklevel=3)
 
-        record = self._logger.makeRecord(self._logger.name, logging.CRITICAL, filename, lineno, message, None, None )
+        record = self._logger.makeRecord(self._logger.name, logging.CRITICAL, pyFile, lineno, message, None, None )
         self._addRecord(record)
 
     #--------------------------------------------------------------------------
@@ -381,10 +410,11 @@ class SiqoLogger(metaclass=SingletonMeta):
         if self._logger.level > logging.AUDIT: return
         #----------------------------------------------------------------------
 
-        filename, lineno = self._callerInfo()
+        message = f'{BColors.OK_GREEN}{message}{BColors.END_C}'
+        pyFile, lineno = self._callerInfo()
         self._logger.log(_LOGGER_AUDIT, message, stacklevel=3)
 
-        record = self._logger.makeRecord(self._logger.name, logging.AUDIT, filename, lineno, message, None, None )
+        record = self._logger.makeRecord(self._logger.name, logging.AUDIT, pyFile, lineno, message, None, None )
         self._addRecord(record)
 
 #------------------------------------------------------------------------------

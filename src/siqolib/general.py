@@ -23,10 +23,11 @@ test_time = time.localtime()
 if test_time.tm_isdst == 1: TIME_ZONE = pytz.timezone('Etc/GMT-2')  # Na servri je zapnuty letny cas
 else                      : TIME_ZONE = pytz.timezone('Etc/GMT-1')  # CET zimny cas
 
+TIME_FORMAT = '%Y.%m.%d %H:%M:%S'
+
 #==============================================================================
 # package's variables
 #------------------------------------------------------------------------------
-_TIME_ZONE    = pytz.timezone('CET')   # Timezone in which library runs
 
 #==============================================================================
 # Datetime tools
