@@ -13,7 +13,7 @@ DIR_CURRENT = os.path.abspath(os.path.dirname(__file__))
 DELIMITER_VERSION = '.'
 MAJOR_VERSION = '1'
 MINOR_VERSION = '3'
-PATCH_VERSION = '2'
+PATCH_VERSION = '3'
 
 PACKAGE_NAME             = 'siqolib'
 PACKAGE_AUTHOR           = 'Pavol Horansky'
