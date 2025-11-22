@@ -116,6 +116,7 @@ def askReal(container, title="Real number dialog", prompt="Zadaj číslo:", init
 
         except ValueError:
             messagebox.showerror("Chyba", "Zadaj platné číslo!", parent=container)
+            return None
 
 #==============================================================================
 # Class SiqoEntry

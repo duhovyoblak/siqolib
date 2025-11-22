@@ -12,7 +12,7 @@ from  general            import TIME_ZONE
 #==============================================================================
 # package's constants
 #------------------------------------------------------------------------------
-_VER = '1.2'
+_VER = '1.3'
 
 _LOGGER_NAME             = 'siqoLogger'
 _LOGGER_LEVEL            = 'WARNING'
@@ -21,11 +21,13 @@ _LOGGER_CONSOLE          = True
 _LOGGER_FILENAME         = 'siqoLogger'
 _LOGGER_FILENAME_POSTFIX = '.log'
 _LOGGER_FILE_MODE        = 'w'
-_LOGGER_FORMAT           = '%(asctime)s | %(levelname)-8s | %(process)6d | %(filename)22s:%(lineno)-5s | %(message)s'
 _LOGGER_AUDIT            = 90       # Custom log level for audit messages
 
-_FRAME_DEPTH             = 3        # How many frames to go back to find caller info
+# Modify the logging level name length in the format string
+_LOGGER_FORMAT = '%(asctime)s |%(levelname)s|%(filename)22s:%(lineno)-5s|%(message)s'
+# %(process)6d | %(thread)6d |
 
+_FRAME_DEPTH             = 3        # How many frames to go back to find caller info
 _MAX_LINES               = 10000    # Maximalny pocet riadkov v pamati
 _CUT_LINES               =  9000    # Po presiahnuti _MAX_LINES zostane _CUT_LINES
 
@@ -154,7 +156,18 @@ def asyncStopWatch(function):
 #==============================================================================
 # SiqoLogger
 #------------------------------------------------------------------------------
+class SiqoFormatter(logging.Formatter):
+    "Modify the logging level name length in the format string"
+
+    def format(self, record):
+
+        if hasattr(record, 'levelname'):
+            record.levelname = record.levelname[:1]  # Truncate levelname to 1 character
+        return super().format(record)
+
+#------------------------------------------------------------------------------
 class SiqoLogger(metaclass=SingletonMeta):
+    "Siqo Logger class"
 
     #==========================================================================
     # Constructor & utilities
@@ -186,7 +199,7 @@ class SiqoLogger(metaclass=SingletonMeta):
         #----------------------------------------------------------------------
         # Inicializujem logger
         #----------------------------------------------------------------------
-        formater = logging.Formatter(_LOGGER_FORMAT)
+        formater =  SiqoFormatter(_LOGGER_FORMAT)
 
         if logFile:
 
