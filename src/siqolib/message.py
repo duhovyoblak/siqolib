@@ -7,7 +7,7 @@ from   tkinter                import ttk, scrolledtext,simpledialog , messagebox
 #==============================================================================
 # package's constants
 #------------------------------------------------------------------------------
-_VER   = '1.10'
+_VER   = '1.11'
 
 #==============================================================================
 # package's variables
@@ -17,7 +17,7 @@ _VER   = '1.10'
 # Class SiqoMessage
 #------------------------------------------------------------------------------
 class SiqoMessage(tk.Toplevel):
-    
+
     #==========================================================================
     # Constructor & utilities
     #--------------------------------------------------------------------------
@@ -47,25 +47,32 @@ class SiqoMessage(tk.Toplevel):
         # Priprava scrollText-u
         #----------------------------------------------------------------------
         st = scrolledtext.ScrolledText(self, width=100,  height=10)
-        st.pack(fill=tk.BOTH, side=tk.LEFT, expand=True)  
-        self.bind('<Escape>', self.close)     
-     
+        st.pack(fill=tk.BOTH, side=tk.LEFT, expand=True)
+        self.bind('<Escape>', self.close)
+
         #----------------------------------------------------------------------
         # Nacitanie textu
         #----------------------------------------------------------------------
-        for row in text: 
+        for row in text:
             st.insert(tk.END, row + '\n')
 
         #----------------------------------------------------------------------
-        
+
     #--------------------------------------------------------------------------
     def close(self, event=None):
         "Destroy window"
-        
-        self.destroy()    
-        
+
+        self.destroy()
+
 #==============================================================================
 # Ask dialogs
+#------------------------------------------------------------------------------
+def askStr(container, title="String dialog", prompt="Zadaj reťazec:", initialvalue=''):
+
+    result = simpledialog.askstring(title, prompt, initialvalue=str(initialvalue), parent=container)
+
+    return result
+
 #------------------------------------------------------------------------------
 def askInt(container, title="Integer dialog", prompt="Zadaj celé číslo:", initialvalue=0, min=None, max=None):
 
@@ -81,7 +88,7 @@ def askInt(container, title="Integer dialog", prompt="Zadaj celé číslo:", ini
             if min is not None and value < min:
                 messagebox.showerror("Chyba", f"Zadaj celé číslo väčšie alebo rovné {min}!", parent=container)
                 continue  # Opakovať, ak je hodnota menšia ako minimum
-          
+
             if max is not None and value > max:
                 messagebox.showerror("Chyba", f"Zadaj celé číslo menšie alebo rovné {max}!", parent=container)
                 continue
@@ -100,14 +107,14 @@ def askReal(container, title="Real number dialog", prompt="Zadaj číslo:", init
 
         if result is None:
             return None  # Používateľ stlačil Cancel
-        
+
         try:
             value = float(result)
 
             if min is not None and value < min:
                 messagebox.showerror("Chyba", f"Zadaj číslo väčšie alebo rovné {min}!", parent=container)
                 continue  # Opakovať, ak je hodnota menšia ako minimum
-          
+
             if max is not None and value > max:
                 messagebox.showerror("Chyba", f"Zadaj číslo menšie alebo rovné {max}!", parent=container)
                 continue
@@ -122,43 +129,43 @@ def askReal(container, title="Real number dialog", prompt="Zadaj číslo:", init
 # Class SiqoEntry
 #------------------------------------------------------------------------------
 def getNumber(journal, name, label, entry='', wpix=500, hpix=500, lpix=300, tpix=200):
-    
+
     journal.I(f"tk.getNumber: {name}")
     number = None
-    
+
     winEntry = SiqoEntry(journal, name, label, entry, wpix, hpix, lpix, tpix)
     winEntry.wait_window(winEntry)
     entry = winEntry.getEntry()
-    
+
     #--------------------------------------------------------------------------
     # Kontrola ci je cislo
     #--------------------------------------------------------------------------
     if entry is not None:
-        
+
         try              : number = float(entry)
         except ValueError: messagebox.showerror(title='Error',  message=f'{entry} is a not valid number')
-    
+
     journal.O(f"tk.getNumber: {number}")
     return number
-    
+
 #------------------------------------------------------------------------------
 def getEntry(journal, name, label, entry='', wpix=500, hpix=500, lpix=300, tpix=200):
-    
+
     journal.I(f"tk.getEntry: {name}")
-    
+
     entry = None
-    
+
     winEntry = SiqoEntry(journal, name, label, entry, wpix, hpix, lpix, tpix)
     winEntry.wait_window(winEntry)
     entry = winEntry.getEntry()
-    
+
     journal.O(f"tk.getEntry: {entry}")
-    
+
     return entry
-    
+
 #------------------------------------------------------------------------------
 class SiqoEntry(tk.Toplevel):
-    
+
     #==========================================================================
     # Constructor & utilities
     #--------------------------------------------------------------------------
@@ -206,44 +213,44 @@ class SiqoEntry(tk.Toplevel):
         #----------------------------------------------------------------------
         ok_button = ttk.Button(self, text="OK", command=self.entry )
         ok_button.pack(expand=True, anchor=tk.E, padx=10, pady=10)
-        
+
         self.bind('<Return>', self.entry )
-        self.bind('<Escape>', self.close )     
-        
+        self.bind('<Escape>', self.close )
+
         self.journal.O()
-        
+
     #--------------------------------------------------------------------------
     def getEntry(self):
         "Returns edited entry"
- 
+
         toRet = self.str_entry.get().strip()
-        
+
         if toRet == '': toRet=None
         self.journal.M(f"tk.{self.name}.getEntry: {toRet}")
-        
+
         return toRet
-        
+
     #--------------------------------------------------------------------------
     def close(self, event=None):
         "Destroy window"
-        
+
         self.journal.M(f"tk.{self.name}.close:")
-        self.destroy() 
+        self.destroy()
 
     #--------------------------------------------------------------------------
     def entry(self, event=None):
-        
+
         self.journal.I(f"tk.{self.name}.entry:")
-        
+
         self.event_generate('<<SiqoEntry>>')
-        self.close()       
+        self.close()
         self.journal.O()
-        
+
 #==============================================================================
 # Class SiqoLogin
 #------------------------------------------------------------------------------
 class SiqoLogin(tk.Toplevel):
-    
+
     #==========================================================================
     # Constructor & utilities
     #--------------------------------------------------------------------------
@@ -253,7 +260,7 @@ class SiqoLogin(tk.Toplevel):
         self.journal = journal
         self.name    = name
         self.journal.I(f"tk.{self.name}.init:")
-        
+
         self.str_user = tk.StringVar(value = '')
         self.str_pasw = tk.StringVar(value = '')
 
@@ -267,10 +274,10 @@ class SiqoLogin(tk.Toplevel):
         #----------------------------------------------------------------------
         lpix = 500  # self.winfo_x()
         hpix = 300  # self.winfo_y()
-     
+
         if 'user' in kwargs.keys(): self.str_user.set(kwargs['user'])
         if 'pasw' in kwargs.keys(): self.str_pasw.set(kwargs['pasw'])
-        
+
         #----------------------------------------------------------------------
         # Create login window
         #----------------------------------------------------------------------
@@ -304,44 +311,44 @@ class SiqoLogin(tk.Toplevel):
         # login button
         login_button = ttk.Button(self, text="Login", command=self.login )
         login_button.pack(fill='x', expand=True, padx=10, pady=10)
-        
+
         self.bind('<Return>', self.login )
-        self.bind('<Escape>', self.close )     
-        
+        self.bind('<Escape>', self.close )
+
         self.journal.O()
-        
+
     #--------------------------------------------------------------------------
     def getUser(self):
         "Returns edited user name"
-        
+
         return self.str_user.get()
-        
+
     #--------------------------------------------------------------------------
     def getPassword(self):
         "Returns and destroy password"
-      
+
         pasw = self.str_pasw.get()
         self.str_pasw.set('')
-        
+
 #        self.journal.M(f"tk.{self.name}.getPassword: '{pasw}'")
         return pasw
-    
+
     #--------------------------------------------------------------------------
     def close(self, event=None):
         "Destroy login window"
-        
-        self.destroy()    
-          
+
+        self.destroy()
+
     #--------------------------------------------------------------------------
     def login(self, event=None):
-        
+
         self.journal.I(f"tk.{self.name}.login:")
-        
+
         self.event_generate('<<SiqoLogin>>')
         self.close()
 
         self.journal.O()
-        
+
 #==============================================================================
 #   Inicializacia kniznice
 #------------------------------------------------------------------------------
@@ -353,7 +360,7 @@ if __name__ == "__main__":
 
     msg = SiqoMessage('Test', ['This is a test message.', 'You can add multiple lines.'])
     msg.mainloop()
-    
+
     #--------------------------------------------------------------------------
     # Test of the InfoMarixGui class
     #--------------------------------------------------------------------------
@@ -364,7 +371,7 @@ if __name__ == "__main__":
     win.config(highlightbackground = "green", highlightcolor= "green")
 
     #--------------------------------------------------------------------------
-    # Zaciatok testu 
+    # Zaciatok testu
     #--------------------------------------------------------------------------
     # Pridanie buttonu na vyvolanie askInt
     def onAskInt():
