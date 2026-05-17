@@ -5,11 +5,12 @@
 import tkinter                as tk
 #from   tkinter                import (ttk, font, scrolledtext, messagebox)
 from   tkinter                import (ttk, font, messagebox)
+from   logger                 import SiqoLogger
 
 #==============================================================================
 # package's constants
 #------------------------------------------------------------------------------
-_VER         = '1.22'
+_VER         = '1.2.3'
 
 _ASC         = 'ᐃ'       # Sorted ascending sign
 _DSC         = '▼'       # Sorted descending sign
@@ -24,22 +25,22 @@ _EXTRA_AFTER =  20       # If there is more rows, add extra row because y-scroll
 #==============================================================================
 # package's variables
 #------------------------------------------------------------------------------
+logger = SiqoLogger('treeview')
 
 #==============================================================================
 # Class SiqoTreeView
 #------------------------------------------------------------------------------
 class SiqoTreeView(tk.Frame):
-    
+
     #==========================================================================
     # Constructor & utilities
     #--------------------------------------------------------------------------
-    def __init__(self, journal, name, frame, lineNum=True, **kwargs):
-        "Call constructor of SiqoTree and initialise it"
+    def __init__(self, name, frame, lineNum=True, **kwargs):
+        """Call constructor of SiqoTree and initialise it"""
 
-        self.journal = journal
         self.name    = name
-        self.journal.I(f'{self.name}.init:')
-        
+        logger.debug(f'{self.name}.init:')
+
         self.lineNum = lineNum   # Shows line numbers in Table view
         self.tabular = False     # keep info if Table or Tree view
         self.lights = []         # Highlightning rules
@@ -49,7 +50,7 @@ class SiqoTreeView(tk.Frame):
         #----------------------------------------------------------------------
         if 'cursor' in kwargs.keys(): cur = kwargs['cursor']
         else                        : cur = None
-        
+
         super().__init__(frame, cursor=cur)
 
         # TV = TreeView
@@ -68,7 +69,7 @@ class SiqoTreeView(tk.Frame):
         self.yscrl.pack(fill='y', side='right')
         self.xscrl.pack(fill='x', side='bottom')
         self.TV.pack(fill='both',side='top', expand='True')
-        
+
         #----------------------------------------------------------------------
         # Internal objects
         #----------------------------------------------------------------------
@@ -84,7 +85,7 @@ class SiqoTreeView(tk.Frame):
         self.rcm.add_command(label ="Copy value"  , command=self.copyValue)
         self.rcm.add_command(label ="Expand All"  , command=lambda: self.expand())
         self.rcm.add_command(label ="Collapse All", command=lambda: self.collapse())
-        
+
         #----------------------------------------------------------------------
         # Bind events on this TreeView to respective methods
         #----------------------------------------------------------------------
@@ -98,10 +99,10 @@ class SiqoTreeView(tk.Frame):
         #----------------------------------------------------------------------
         self.TV.tag_configure('TableCell',  font=font.nametofont('TkFixedFont'))
         self.TV.tag_configure('TreeCell',   font=font.nametofont('TkFixedFont'))
-        
+
         self.TV.tag_configure('RedRow',     background='#ffcccc')   # red
         self.TV.tag_configure('YellowRow',  background='#ffffcc')   # yellow
-        self.TV.tag_configure('GreenRow',   background='#ccffcc')   # green 
+        self.TV.tag_configure('GreenRow',   background='#ccffcc')   # green
         self.TV.tag_configure('BlueRow',    background='#e6f3ff')   # blue
         self.TV.tag_configure('GrayRow',    background='#dddddd')   # gray
         self.TV.tag_configure('OrangeRow',  background='#ffcc99')   # orange
@@ -109,66 +110,66 @@ class SiqoTreeView(tk.Frame):
         self.TV.tag_configure('BrownRow',   background='#ffcc99')   # brown
 
         #----------------------------------------------------------------------
-        self.journal.O()
+        logger.debug(f'{self.name}.init: done')
 
     #--------------------------------------------------------------------------
     def clear(self):
         "Clears all content of the TreeView"
-        
-        self.journal.I(f'{self.name}.clear:')
-        
+
+        logger.debug(f'{self.name}.clear:')
+
         for i in self.TV.get_children():
             self.TV.delete(i)
-            
+
         #----------------------------------------------------------------------
         # Clear objects
         #----------------------------------------------------------------------
         self.where = None
-        
+
         self.selected['region' ] = ''
         self.selected['colNum' ] = -1
         self.selected['col'    ] = ''
         self.selected['val'    ] = ''
         self.selected['row'    ] = {}
         self.selected['head'   ] = ''
-        
-        self.journal.O()
-            
+
+        logger.debug(f'{self.name}.clear: done')
+
     #--------------------------------------------------------------------------
     def clickWhere(self, event):
         "Resolve object of the TreeView which was clicked on"
-        
-        self.journal.I(f'{self.name}.clickWhere:')
-        
+
+        logger.debug(f'{self.name}.clickWhere:')
+
         reg   = ''
         row   = ''
         val   = ''
         col   = ''
         colid = -1
-        head  = '' 
-        
+        head  = ''
+
         #----------------------------------------------------------------------
         # Identify afected row
         #----------------------------------------------------------------------
         iid = self.TV.identify_row(event.y)
-      
+
         #----------------------------------------------------------------------
         # Set focus here if no rows was clicked on
         #----------------------------------------------------------------------
         if iid:
             self.TV.focus(iid)
             self.TV.selection_set(iid)
-        
+
         reg = self.TV.identify_region(event.x,event.y)
         #----------------------------------------------------------------------
         # If clicked on header
         #----------------------------------------------------------------------
         if reg == 'heading':
-            
+
             head    = self.TV.identify_column(event.x)
             colid   = int(self.TV.identify_column(event.x)[1:]) - 1
             val     = self.TV.heading(head, 'text')
-            
+
         #----------------------------------------------------------------------
         # If clicked on row in a table
         #----------------------------------------------------------------------
@@ -177,20 +178,20 @@ class SiqoTreeView(tk.Frame):
             curItem = self.TV.focus()
             val     = self.TV.item(curItem, 'values')
             colid   = int(self.TV.identify_column(event.x)[1:]) - 1
-            
+
             row     = val
             val     = val[colid]
             hd      = self.TV.identify_column(event.x)
             col     = self.TV.heading(hd, 'text').replace(' '+_FLT,'')
-            
+
         #----------------------------------------------------------------------
         # If clicked on row in a tree
         #----------------------------------------------------------------------
         elif reg == 'tree':
-            
+
             curItem = self.TV.focus()
             val     = self.TV.item(curItem)
-            
+
             row     = int(curItem)-1
             val     = val['text']
             hd      = self.TV.identify_column(event.x)
@@ -201,23 +202,23 @@ class SiqoTreeView(tk.Frame):
         self.where = { 'region':reg, 'head':head, 'row':row, 'col':col, 'val':val, 'colNum':colid}
 
         #----------------------------------------------------------------------
-        self.journal.M(f'{self.name}.clickWhere: {self.where}')
-        self.journal.O()
-        
+        logger.debug(f'{self.name}.clickWhere: {self.where}')
+        logger.debug(f'{self.name}.clickWhere: done')
+
         return self.where
 
     #--------------------------------------------------------------------------
     def setSelected(self, event):
-        
-        self.journal.I(f'{self.name}.setSelected:')
-        
+
+        logger.debug(f'{self.name}.setSelected:')
+
         where = self.clickWhere(event)
-        
+
         #----------------------------------------------------------------------
         # If there is a valid click position
         #----------------------------------------------------------------------
         if (where['colNum'] > -1) or (where['region'] == 'tree'):
-            
+
             self.selected['region' ] = where['region']
             self.selected['colNum' ] = where['colNum']
             self.selected['col'    ] = where['col' ]
@@ -237,59 +238,59 @@ class SiqoTreeView(tk.Frame):
             self.selected['head'   ] = ''
 
         #----------------------------------------------------------------------
-        self.journal.M(f'{self.name}.clickWhere: {self.where}')
-        self.journal.O()
-        
+        logger.debug(f'{self.name}.setSelected: {self.selected}')
+        logger.debug(f'{self.name}.setSelected: done')
+
         return self.selected
-       
+
     #--------------------------------------------------------------------------
     def doubleClick(self, event):
 
-        self.journal.I(f'{self.name}.doubleClick:')
+        logger.debug(f'{self.name}.doubleClick:')
 
         self.setSelected(event)
         self.event_generate('<<SiqoTreeView-DoubleLeftClick>>')
-        
-        self.journal.M(f'{self.name}.doubleClick: {self.selected}')
-        self.journal.O()
-        
+
+        logger.debug(f'{self.name}.doubleClick: {self.selected}')
+        logger.debug(f'{self.name}.doubleClick: done')
+
     #--------------------------------------------------------------------------
     def rcmMenu(self, event):
-        
+
         self.setSelected(event)
 
         #----------------------------------------------------------------------
         if (self.selected['region'] in ['tree','cell']):
             try    : self.rcm.tk_popup(event.x_root, event.y_root)
             finally: self.rcm.grab_release()
-            
+
     #--------------------------------------------------------------------------
     def expand(self, parent=''):
         "Expands all branches for Treelike view"
-        
-        self.journal.I(f'{self.name}.expand:')
-        
+
+        logger.debug(f'{self.name}.expand:')
+
         self.TV.item(parent, open=True)
-        
+
         # Recursive expanding of children
         for child in self.TV.get_children(parent):
             self.expand(child)
-            
-        self.journal.O()
-        
+
+        logger.debug(f'{self.name}.expand: done')
+
     def collapse(self, parent=''):
         "Collapses all branches for Treelike view"
-        
-        self.journal.I(f'{self.name}.collapse:')
-        
+
+        logger.debug(f'{self.name}.collapse:')
+
         self.TV.item(parent, open=False)
-        
+
         # Recursive collapsing of children
         for child in self.TV.get_children(parent):
             self.collapse(child)
-            
-        self.journal.O()
-        
+
+        logger.debug(f'{self.name}.collapse: done')
+
     #--------------------------------------------------------------------------
     def datToTab(self, dat, lights=[]):
         """
@@ -306,25 +307,25 @@ class SiqoTreeView(tk.Frame):
         #
         #--------------------------------------------------------------------------
         """
-        
-        self.journal.I(f'{self.name}.datToTab:')
+
+        logger.debug(f'{self.name}.datToTab:')
         self.lights = lights
 
         #----------------------------------------------------------------------
         # Check incoming data
         #----------------------------------------------------------------------
         if not isinstance(dat,list) or len(dat)==0:
-            
-            self.journal.M(f'{self.name}.datToTab: Data is empty or in wrong structure', True)
-            self.journal.O()
+
+            logger.error(f'{self.name}.datToTab: Data is empty or in wrong structure')
+            logger.debug(f'{self.name}.datToTab: done')
             return f"Data for TreeView '{self.name}' is empty or in wrong structure"
-        
+
         #----------------------------------------------------------------------
         # Set headers from dat[0]
         #----------------------------------------------------------------------
         if self.lineNum: columns = ["POS"]
         else           : columns = []
-        
+
         columns.extend(dat[0])
         self.TV["columns"] = columns
 
@@ -337,68 +338,68 @@ class SiqoTreeView(tk.Frame):
         # First, find out actual max width for each column
         #----------------------------------------------------------------------
         for row in dat:
-            
+
             # Nastavim pociatocny index ppodla lineNum
-            if self.lineNum: 
+            if self.lineNum:
                 i = 1
                 maxW[0] = 5  #POS 5-ciferny
             else           : i = 0
-            
+
             #------------------------------------------------------------------
             # Prejdem vsetky skutocne col v riadku
             #------------------------------------------------------------------
             for col in row:
-                if col: w = len(str(col)) 
+                if col: w = len(str(col))
                 else  : w = 0
 
                 if w > maxW[i]: maxW[i] = w
                 i += 1
 
         #----------------------------------------------------------------------
-        # Second, cut to WIDTH_MAX                 
+        # Second, cut to WIDTH_MAX
         sumW = sum(maxW)
-        
+
         if sumW > _WIDTH_SUM:
-            for i in range( len(maxW) ): 
+            for i in range( len(maxW) ):
                 if maxW[i] > _WIDTH_MAX: maxW[i] = _WIDTH_MAX
 
         #----------------------------------------------------------------------
         # Third, shrink/expand by coefficient
         sumW = sum(maxW)
         cW = _WIDTH_SUM / sumW
-        
-        self.journal.M(f'{self.name}.datToTab: sumW={sumW}, cW={cW}')
-        
+
+        logger.debug(f'{self.name}.datToTab: sumW={sumW}, cW={cW}')
+
         #----------------------------------------------------------------------
         # Define column's properties
         #----------------------------------------------------------------------
         i = 0
-        for col in self.TV["columns"]: 
-            
+        for col in self.TV["columns"]:
+
             pixW = int(9*cW*maxW[i]) + 0    # vypocitana width in pixels
             minW = 9*len(col)               # min width = 9 pix * dlzka hlavicky
             if pixW < minW: pixW = minW     # ak je minW vacsie ako vypocitane, tak minW
             self.TV.column(col, width=pixW, minwidth=minW, stretch=False)
             i += 1
-        
+
         #----------------------------------------------------------------------
         # Define column's headers
         #----------------------------------------------------------------------
         for col in self.TV["columns"]:
             self.TV.heading(col, text=col, anchor='w', command=lambda _col = col: self.sortColumn(_col, False))
-        
+
         #----------------------------------------------------------------------
         # Populate rows from dat
         #----------------------------------------------------------------------
         pos = 1
         for row in dat[1:]:
-            
+
             #------------------------------------------------------------------
             # Add line number
             #------------------------------------------------------------------
             if self.lineNum: row.insert(0, pos)
             pos += 1
-            
+
             #------------------------------------------------------------------
             # Add row to TreeView
             self.TV.insert('', tk.END, values=row)
@@ -414,7 +415,7 @@ class SiqoTreeView(tk.Frame):
         self.rcm_enabler()
 
         #----------------------------------------------------------------------
-        self.journal.O()
+        logger.debug(f'{self.name}.datToTab: done')
         return 'OK'
 
     def coloring(self):
@@ -432,7 +433,7 @@ class SiqoTreeView(tk.Frame):
             # Highlighted rows
             colored = False
             for high in self.lights:
-                    
+
                 # If does not contain high['colId'], then break
                 if row[ high['colId'] ] is None: break
 
@@ -441,15 +442,15 @@ class SiqoTreeView(tk.Frame):
 
                 #--------------------------------------------------------------
                 if   high['test'] == 'starts':
-                    
-                    if row[ high['colId'] ].startswith( high['val']  ): 
+
+                    if row[ high['colId'] ].startswith( high['val']  ):
                         self.TV.item(rowItem, tags=high['tags'])
                         colored = True
-                
+
                 #--------------------------------------------------------------
                 elif high['test'] == 'not starts':
 
-                    if not row[ high['colId'] ].startswith( high['val']  ): 
+                    if not row[ high['colId'] ].startswith( high['val']  ):
                         self.TV.item(rowItem, tags=high['tags'])
                         colored = True
 
@@ -463,21 +464,21 @@ class SiqoTreeView(tk.Frame):
                 #--------------------------------------------------------------
                 elif high['test'] == 'is':
 
-                    if row[ high['colId'] ] == high['val']: 
+                    if row[ high['colId'] ] == high['val']:
                         self.TV.item(rowItem, tags=high['tags'])
                         colored = True
 
                 #--------------------------------------------------------------
                 elif high['test'] == 'lt':
                     rr = 0 if row[high['colId']] == 'None' else row[high['colId']]
-                    if rr < high['val']: 
+                    if rr < high['val']:
                         self.TV.item(rowItem, tags=high['tags'])
                         colored = True
 
                 #--------------------------------------------------------------
                 elif high['test'] == 'gt':
                     rr = 0 if row[high['colId']] == 'None' else row[high['colId']]
-                    if rr > high['val']: 
+                    if rr > high['val']:
                         self.TV.item(rowItem, tags=high['tags'])
                         colored = True
 
@@ -492,35 +493,35 @@ class SiqoTreeView(tk.Frame):
     #--------------------------------------------------------------------------
     def showValue(self):
         "Show value from selected cell"
-        
+
         sel=self.selected
-        self.journal.I(f"{self.name}.showValue: sel='{sel}'")
-        
+        logger.debug(f"{self.name}.showValue: sel='{sel}'")
+
         if sel['colNum'] > -1:
-            
+
             val = sel['val']
-            
+
             self.clipboard_clear()
             self.clipboard_append(val)
             messagebox.showinfo(title=f"Column: {sel['col']}",  message=val)
-        
-        self.journal.O()
-    
+
+        logger.debug(f"{self.name}.showValue: done")
+
     def copyValue(self):
         "Copy value from selected cell"
-        
+
         sel=self.selected
-        self.journal.I(f"{self.name}.showValue: sel='{sel}'")
-        
+        logger.debug(f"{self.name}.copyValue: sel='{sel}'")
+
         if sel['colNum'] > -1:
-            
+
             val = sel['val']
-            
+
             self.clipboard_clear()
             self.clipboard_append(val)
-        
-        self.journal.O()
-        
+
+        logger.debug(f"{self.name}.copyValue: done")
+
     #==========================================================================
     # Filtering the Table
     #--------------------------------------------------------------------------
@@ -529,50 +530,50 @@ class SiqoTreeView(tk.Frame):
         # Filter only in tabular form
         if self.tabular:
             sel=self.selected
-            self.journal.I(f"{self.name}.addFilter: sel='{sel}'")
-            
+            logger.debug(f"{self.name}.addFilter: sel='{sel}'")
+
             if sel['colNum'] > -1:
                 self.filterColumn(colNum=sel['colNum'], col=sel['col'], val=sel['val'])
-            
-            self.journal.O()
-        
+
+            logger.debug(f"{self.name}.addFilter: done")
+
     #--------------------------------------------------------------------------
     def filterColumn(self, colNum, col, val):
         "Filter rows based on respective value"
-        
-        self.journal.I(f"{self.name}.filterColumn: colNum='{colNum}', col='{col}', val='{val}'")
-        
+
+        logger.debug(f"{self.name}.filterColumn: colNum='{colNum}', col='{col}', val='{val}'")
+
         #----------------------------------------------------------------------
         # For all rows
         #----------------------------------------------------------------------
         for child in self.TV.get_children():
-            
+
             rowItem = self.TV.item(child)
 
             #------------------------------------------------------------------
             # Ak riadok obsahuje stlpce, t.j. nieje to fiktivny prazdny riadok
             #------------------------------------------------------------------
             if rowItem["values"] != '':
-                    
+
                 #--------------------------------------------------------------
                 # Test if row matches filters
                 #--------------------------------------------------------------
                 if str(rowItem["values"][colNum]) != val: self.TV.delete(child)
-            
+
         #----------------------------------------------------------------------
-        # Ad flag to column's heading 
+        # Ad flag to column's heading
         #----------------------------------------------------------------------
         self.TV.heading(col, text=f'{col} {_FLT}')
-        self.journal.O()
-            
+        logger.debug(f"{self.name}.filterColumn: done")
+
     #==========================================================================
     # Sorting the column in the Table
     #--------------------------------------------------------------------------
     def sortColumn(self, col, reverse=False):
 
-        self.journal.I(f"{self.name}.sortColumn: col='{col}', reverse={reverse}")
-        
-        # Ziskam zoznam zotriedenych hodnot        
+        logger.debug(f"{self.name}.sortColumn: col='{col}', reverse={reverse}")
+
+        # Ziskam zoznam zotriedenych hodnot
         lst = [(self.TV.set(k, col), k) for k in self.TV.get_children('')]
         lst.sort(reverse=reverse)
 
@@ -582,15 +583,15 @@ class SiqoTreeView(tk.Frame):
 
         # Resetnem nazvy stlpcov na originalne nazvy
         for c in  self.TV["columns"]: self.TV.heading(c, text=c)
-            
+
         # K nazvu sortovaneho stlpca doplnim zank ASC/DSC
         if reverse: text = f'{col} {_DSC}'
         else      : text = f'{col} {_ASC}'
-        
+
         self.TV.heading(col, text=text, command=lambda _col=col: self.sortColumn(_col, not reverse))
         self.coloring()
 
-        self.journal.O()
+        logger.debug(f'{self.name}.sortColumn: done')
 
     #--------------------------------------------------------------------------
     def datToTree(self, dat, rootId=None, maxId=0, indent=12, openLvl=2, lvl=0, lights=[]):
@@ -609,17 +610,17 @@ class SiqoTreeView(tk.Frame):
         #
         #--------------------------------------------------------------------------
         """
-        
+
         #----------------------------------------------------------------------
         # Kontrola existencie udajov
         #----------------------------------------------------------------------
         if dat is None or len(dat)==0: return maxId
-        
+
         #----------------------------------------------------------------------
         # Pri prvom prechode metodou konfiguracia zobrazenia
         #----------------------------------------------------------------------
-        if rootId is None: 
-            self.journal.I(f"{self.name}.datToTree: len = {len(dat)}")
+        if rootId is None:
+            logger.debug(f"{self.name}.datToTree: len = {len(dat)}")
             self.tabular = False
             self.lights = lights
 
@@ -633,18 +634,18 @@ class SiqoTreeView(tk.Frame):
         # Prejdem vsetky polozky dictionary
         #----------------------------------------------------------------------
         for key, val in dat.items():
-            
+
             maxId += 1
             tags   = ['TreeCell']
 
             #------------------------------------------------------------------
             # Ak je value dictionary, potom rekurzia
             #------------------------------------------------------------------
-            if type(val)==dict: 
-                
+            if type(val)==dict:
+
                 if lvl < openLvl: opn = True
                 else            : opn = False
-                
+
                 #--------------------------------------------------------------
                 # Highlightning test if dat[key] ?? testValue
                 #--------------------------------------------------------------
@@ -655,14 +656,14 @@ class SiqoTreeView(tk.Frame):
                 #--------------------------------------------------------------
                 self.TV.insert('', tk.END, text=f'[{key}]', iid=maxId, open=opn, tags=tags)
                 if rootId is not None: self.TV.move(maxId, rootId, localPos)
-                
+
                 maxId  = self.datToTree(val, maxId, maxId, indent, openLvl, lvl+1, lights)
-            
+
             #------------------------------------------------------------------
             # Ak je value list
             #------------------------------------------------------------------
-            elif type(val)==list: 
-                
+            elif type(val)==list:
+
                 self.TV.insert('', tk.END, text=f'[{key}]', iid=maxId, open=True, tags=tags)
                 listRoot = maxId
                 if rootId is not None: self.TV.move(listRoot, rootId, localPos)
@@ -670,16 +671,16 @@ class SiqoTreeView(tk.Frame):
                 # Vlozim list po riadkoch
                 listPos = 0
                 for row in val:
-                    
+
                     maxId   += 1
                     self.TV.insert('', tk.END, text=f'{str(row)}', iid=maxId, open=True, tags=tags)
                     self.TV.move(maxId, listRoot, listPos)
                     listPos += 1
-            
+
             #------------------------------------------------------------------
             # Trivialna polozka
             #------------------------------------------------------------------
-            else: 
+            else:
                 #--------------------------------------------------------------
                 # Highlightning test ak som na spravnom riadku
                 #--------------------------------------------------------------
@@ -690,61 +691,61 @@ class SiqoTreeView(tk.Frame):
                 #--------------------------------------------------------------
                 key = str(key).ljust(indent)
                 self.TV.insert('', tk.END, text=f'{key:20}: {str(val)}', iid=maxId, open=True, tags=tags)
-                
+
                 #--------------------------------------------------------------
                 # Ak som v podstrome, presuniem pod rootId
                 #--------------------------------------------------------------
                 if rootId is not None: self.TV.move(maxId, rootId, localPos)
-                
+
             #------------------------------------------------------------------
             # Zvysenie lokalnej pozicie
             #------------------------------------------------------------------
             localPos += 1
-                
+
         #----------------------------------------------------------------------
-        # Pri poslednom prechode metodou 
+        # Pri poslednom prechode metodou
         #----------------------------------------------------------------------
-        if rootId is None: 
+        if rootId is None:
             # enable/disable right-click menu
             self.rcm_enabler()
-            self.journal.O()
+            logger.debug(f'{self.name}.datToTree: done')
 
         #----------------------------------------------------------------------
         return maxId
-        
+
     #--------------------------------------------------------------------------
     def getTreeDicTags(self, dic):
-        
+
         tagSet = set()  # Set pretoze moze dojst k opakovanemu vlozeniu rovnakeho tagu
-        
+
         #----------------------------------------------------------------------
         # Otestujem vsetky zaznamy v dic
         #----------------------------------------------------------------------
         for key, val in dic.items():
-            
+
             tagSet.update(self.getTreeLineTags(key, val))
-        
+
         #----------------------------------------------------------------------
         # Konverzia tagSet na list
         #----------------------------------------------------------------------
         toRet = [tag for tag in tagSet]
-        
-        return toRet        
+
+        return toRet
 
     #--------------------------------------------------------------------------
     def getTreeLineTags(self, key, val):
-        
+
         tagSet = set()  # Set pretoze moze dojst k opakovanemu vlozeniu rovnakeho tagu
-        
+
         #----------------------------------------------------------------------
         # Prejdem vsetky pravidla highligthningu
         #----------------------------------------------------------------------
         for high in self.lights:
-            
+
             tKey = high['key' ]
             tVal = high['val' ]
             tags = high['tags']
-            
+
             #------------------------------------------------------------------
             # Ak som na riadku ktory sa ma zvyraznit
             #------------------------------------------------------------------
@@ -753,15 +754,15 @@ class SiqoTreeView(tk.Frame):
                 #--------------------------------------------------------------
                 # Test podmienky highlightningu
                 #--------------------------------------------------------------
-                if   high['test'] == 'starts':                 
+                if   high['test'] == 'starts':
 
                     if val.startswith(tVal)    : tagSet.update(tags)
-                
+
                 #--------------------------------------------------------------
                 elif high['test'] == 'not starts':
 
                     if not val.startswith(tVal): tagSet.update(tags)
-                
+
                 #--------------------------------------------------------------
                 elif high['test'] == 'cont':
 
@@ -786,9 +787,9 @@ class SiqoTreeView(tk.Frame):
         # Konverzia tagSet na list
         #----------------------------------------------------------------------
         toRet = [tag for tag in tagSet]
-        
+
         return toRet
-        
+
     #--------------------------------------------------------------------------
     def selectAll(self, _):
         # Ctrl+A

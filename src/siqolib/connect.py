@@ -1,5 +1,5 @@
 #==============================================================================
-# Class SiqoConnect as an abstract class 
+# Class SiqoConnect as an abstract class
 #------------------------------------------------------------------------------
 import sys
 import os
@@ -16,11 +16,13 @@ hst = 'PC'
 #==============================================================================
 # package's constants
 #------------------------------------------------------------------------------
+_VER          = '1.0.0'
+#------------------------------------------------------------------------------
 _TIME_ZONE    = pytz.timezone('CET')   # Timezone in which Journal runs
 _TIME_WATCH   = 5                      # Logovanie prikazov trvajucich viac sekund
 _PING_LAG     = 10                     # Pocet hodin do najblizsieho ping-u
 _QRY_SAMPLE   = 60                     # Dlzka QRY na zobrazenie
- 
+
 #==============================================================================
 # package's variables
 #------------------------------------------------------------------------------
@@ -29,7 +31,7 @@ _QRY_SAMPLE   = 60                     # Dlzka QRY na zobrazenie
 # SiqoConnect
 #------------------------------------------------------------------------------
 class SiqoConnect:
-    
+
     #==========================================================================
     # Static variables & methods
     #--------------------------------------------------------------------------
@@ -96,15 +98,15 @@ class SiqoConnect:
         # Zistim credentials
         #----------------------------------------------------------------------
         user = conf['user']
-        
+
         if pasw is None: pasw = gen.getPasw(journal, con, user)
         if pasw is None: pasw = _NOPAS
-        
+
         #----------------------------------------------------------------------
         # Skorigujem nazov konekcie pre API konekcie
         #----------------------------------------------------------------------
         if con == _AUTH: con = f'{_AUTH}{who}'
-        
+
         #----------------------------------------------------------------------
         # Vytvorim instanciu konekcie
         #----------------------------------------------------------------------
@@ -198,38 +200,38 @@ class SiqoConnect:
     #==========================================================================
     # Constructor & utilities
     #--------------------------------------------------------------------------
-    def __init__(self, journal, name, notes='')
-        "Call constructor of SiqoConnect and initialise it"
-        
+    def __init__(self, journal, name, notes=''):
+        """Call constructor of SiqoConnect and initialise it"""
+
         journal.I(f'SiqoConnect.init:{name}')
-        
+
         self.journal     = journal      # Odkaz na globalny journal
         self.name        = name         # Nazov konekcie
         self.notes       = notes        # Poznamky ku konekcii
 
-        self.user        = ''           # User        
+        self.user        = ''           # User
         self.host        = ''           # Nazov hostu
         self.port        = ''           # Cislo portu ako string
-        self.service     = ''           # Nazov service 
-        self.keytab      = ''           # Nazov keytab file 
+        self.service     = ''           # Nazov service
+        self.keytab      = ''           # Nazov keytab file
         self.enc         = 'UTF-8'      # encoding
         self.prop        = {}           # User defined properties
         self.initialised = False        # Status of the connection
 
         self.eng         = None         # Objekt driver engine
         self.cur         = None         # Objekt kurzor
-        
+
         self.lastPing    = None         # Time of last ping
         self.lastKinit   = None         # Time of last kinit
 
         self.journal.O(f'{self.name}.init: done')
-        
+
     #==========================================================================
     # API for users
     #--------------------------------------------------------------------------
     def info(self, who):
         "Returns info about the connect"
- 
+
         dat = {}
         msg = []
 
@@ -247,7 +249,7 @@ class SiqoConnect:
 
         dat['lastPing'   ] = self.lastPing. strftime('%d.%m. %H:%M:%S')
         dat['lastKinit'  ] = self.lastKinit.strftime('%d.%m. %H:%M:%S')
-        
+
         for key, val in self.prop.items():
             dat[key] = val
 
@@ -307,7 +309,7 @@ class SiqoConnect:
 #==============================================================================
 #   Inicializacia kniznice
 #------------------------------------------------------------------------------
-print('SiqoConnect ver 1.00')
+print(f'SiqoConnect {_VER}')
 
 #==============================================================================
 #                              END OF FILE

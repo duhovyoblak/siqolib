@@ -4,13 +4,12 @@
 from   datetime import date, datetime
 import pytz
 import os
-from   datetime         import date, datetime
 from   general          import _TIME_ZONE
 
 #==============================================================================
 # package's constants
 #------------------------------------------------------------------------------
-_VER          = '1.36'
+_VER          = '1.3.6'
 
 _INDENT_START =     1
 _INDENT_MAX   =    20

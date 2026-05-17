@@ -3,15 +3,17 @@
 #------------------------------------------------------------------------------
 import tkinter                as tk
 from   tkinter                import ttk, scrolledtext,simpledialog , messagebox
+from   logger                 import SiqoLogger
 
 #==============================================================================
 # package's constants
 #------------------------------------------------------------------------------
-_VER   = '1.11'
+_VER   = '1.1.2'
 
 #==============================================================================
 # package's variables
 #------------------------------------------------------------------------------
+logger = SiqoLogger('message')
 
 #==============================================================================
 # Class SiqoMessage
@@ -128,12 +130,12 @@ def askReal(container, title="Real number dialog", prompt="Zadaj číslo:", init
 #==============================================================================
 # Class SiqoEntry
 #------------------------------------------------------------------------------
-def getNumber(journal, name, label, entry='', wpix=500, hpix=500, lpix=300, tpix=200):
+def getNumber(name, label, entry='', wpix=500, hpix=500, lpix=300, tpix=200):
 
-    journal.I(f"tk.getNumber: {name}")
+    logger.debug(f"tk.getNumber: {name}")
     number = None
 
-    winEntry = SiqoEntry(journal, name, label, entry, wpix, hpix, lpix, tpix)
+    winEntry = SiqoEntry(name, label, entry, wpix, hpix, lpix, tpix)
     winEntry.wait_window(winEntry)
     entry = winEntry.getEntry()
 
@@ -145,21 +147,21 @@ def getNumber(journal, name, label, entry='', wpix=500, hpix=500, lpix=300, tpix
         try              : number = float(entry)
         except ValueError: messagebox.showerror(title='Error',  message=f'{entry} is a not valid number')
 
-    journal.O(f"tk.getNumber: {number}")
+    logger.debug(f"tk.getNumber: {number}")
     return number
 
 #------------------------------------------------------------------------------
-def getEntry(journal, name, label, entry='', wpix=500, hpix=500, lpix=300, tpix=200):
+def getEntry(name, label, entry='', wpix=500, hpix=500, lpix=300, tpix=200):
 
-    journal.I(f"tk.getEntry: {name}")
+    logger.debug(f"tk.getEntry: {name}")
 
     entry = None
 
-    winEntry = SiqoEntry(journal, name, label, entry, wpix, hpix, lpix, tpix)
+    winEntry = SiqoEntry(name, label, entry, wpix, hpix, lpix, tpix)
     winEntry.wait_window(winEntry)
     entry = winEntry.getEntry()
 
-    journal.O(f"tk.getEntry: {entry}")
+    logger.debug(f"tk.getEntry: {entry}")
 
     return entry
 
@@ -169,12 +171,11 @@ class SiqoEntry(tk.Toplevel):
     #==========================================================================
     # Constructor & utilities
     #--------------------------------------------------------------------------
-    def __init__(self, journal, name, label, entry='', wpix=250, hpix=150, lpix=300, tpix=200):
-        "Call constructor of SiqoEntry and initialise it"
+    def __init__(self, name, label, entry='', wpix=250, hpix=150, lpix=300, tpix=200):
+        """Call constructor of SiqoEntry and initialise it"""
 
-        self.journal = journal
         self.name    = name
-        self.journal.I(f"tk.{self.name}.init:")
+        logger.debug(f"tk.{self.name}.init:")
 
         #----------------------------------------------------------------------
         # Inicializacia okna
@@ -217,7 +218,7 @@ class SiqoEntry(tk.Toplevel):
         self.bind('<Return>', self.entry )
         self.bind('<Escape>', self.close )
 
-        self.journal.O()
+        logger.debug(f"tk.{self.name}.init: done")
 
     #--------------------------------------------------------------------------
     def getEntry(self):
@@ -226,7 +227,7 @@ class SiqoEntry(tk.Toplevel):
         toRet = self.str_entry.get().strip()
 
         if toRet == '': toRet=None
-        self.journal.M(f"tk.{self.name}.getEntry: {toRet}")
+        logger.info(f"tk.{self.name}.getEntry: {toRet}")
 
         return toRet
 
@@ -234,17 +235,17 @@ class SiqoEntry(tk.Toplevel):
     def close(self, event=None):
         "Destroy window"
 
-        self.journal.M(f"tk.{self.name}.close:")
+        logger.debug(f"tk.{self.name}.close:")
         self.destroy()
 
     #--------------------------------------------------------------------------
     def entry(self, event=None):
 
-        self.journal.I(f"tk.{self.name}.entry:")
+        logger.debug(f"tk.{self.name}.entry:")
 
         self.event_generate('<<SiqoEntry>>')
         self.close()
-        self.journal.O()
+        logger.debug(f"tk.{self.name}.entry: done")
 
 #==============================================================================
 # Class SiqoLogin
@@ -254,12 +255,11 @@ class SiqoLogin(tk.Toplevel):
     #==========================================================================
     # Constructor & utilities
     #--------------------------------------------------------------------------
-    def __init__(self, journal, name, **kwargs):
-        "Call constructor of SiqoLogin and initialise it"
+    def __init__(self, name, **kwargs):
+        """Call constructor of SiqoLogin and initialise it"""
 
-        self.journal = journal
         self.name    = name
-        self.journal.I(f"tk.{self.name}.init:")
+        logger.debug(f"tk.{self.name}.init:")
 
         self.str_user = tk.StringVar(value = '')
         self.str_pasw = tk.StringVar(value = '')
@@ -315,7 +315,7 @@ class SiqoLogin(tk.Toplevel):
         self.bind('<Return>', self.login )
         self.bind('<Escape>', self.close )
 
-        self.journal.O()
+        logger.debug(f"tk.{self.name}.init: done")
 
     #--------------------------------------------------------------------------
     def getUser(self):
@@ -330,7 +330,7 @@ class SiqoLogin(tk.Toplevel):
         pasw = self.str_pasw.get()
         self.str_pasw.set('')
 
-#        self.journal.M(f"tk.{self.name}.getPassword: '{pasw}'")
+        logger.debug(f"tk.{self.name}.getPassword: '{pasw}'")
         return pasw
 
     #--------------------------------------------------------------------------
@@ -342,12 +342,12 @@ class SiqoLogin(tk.Toplevel):
     #--------------------------------------------------------------------------
     def login(self, event=None):
 
-        self.journal.I(f"tk.{self.name}.login:")
+        logger.debug(f"tk.{self.name}.login:")
 
         self.event_generate('<<SiqoLogin>>')
         self.close()
 
-        self.journal.O()
+        logger.debug(f"tk.{self.name}.login: done")
 
 #==============================================================================
 #   Inicializacia kniznice
@@ -375,7 +375,7 @@ if __name__ == "__main__":
     #--------------------------------------------------------------------------
     # Pridanie buttonu na vyvolanie askInt
     def onAskInt():
-        value = askInt(win, title="Zadaj číslo", prompt="Zadaj celé číslo:", initialvalue=7, min=1, max=10)
+        value = askInt(title="Zadaj číslo", prompt="Zadaj celé číslo:", initialvalue=7, min=1, max=10)
         print(f"Zadané číslo: {value}")
 
     btn_ask_int = tk.Button(win, text="Zadaj celé číslo", command=onAskInt)

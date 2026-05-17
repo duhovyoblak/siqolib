@@ -1,6 +1,7 @@
 #==============================================================================
 # Siqo common library settings
 #------------------------------------------------------------------------------
+_VER = '1.0.1'
 
 hosts = {
       "ODS": {
@@ -9,7 +10,7 @@ hosts = {
          "SERVICE" : "TRN_USERS.tatrabanka.sk",
          "SERV_ID" : 22
       },
-    
+
       "IALFONZ": {
          "HOST"    : "oradbintl2.tatrabanka.sk",
          "PORT"    : "1523",
@@ -28,9 +29,9 @@ hosts = {
          "SERVICE" : "ALFONZ.tatrabanka.sk",
          "SERV_ID" : 2
       },
-    
+
       "DDWH": {
-         "HOST"    : "oradbdevl1.tatrabanka.sk", 
+         "HOST"    : "oradbdevl1.tatrabanka.sk",
          "PORT"    : "1525",
          "SERVICE" : "DDWH.TATRABANKA.SK",
          "SERV_ID" : 1
@@ -48,31 +49,31 @@ hosts = {
          "SERV_ID" : 1
       },
       "DWH": {
-         "HOST"    : "oradbprodl1.tatrabanka.sk", 
+         "HOST"    : "oradbprodl1.tatrabanka.sk",
          "PORT"    : "1521",
          "SERVICE" : "DWH_USERS.tatrabanka.sk",
          "SERV_ID" : 1
       },
       "Neo4j": {
-         "HOST"    : "neo4j://10.238.168.57", 
+         "HOST"    : "neo4j://10.238.168.57",
          "PORT"    : "7687",
          "SERVICE" : "Neo4j",
          "SERV_ID" : "NEO"
       },
       "TBLAKE": {
-         "HOST"    : "", 
+         "HOST"    : "",
          "PORT"    : "",
          "SERVICE" : "TBLAKE",
          "SERV_ID" : "TBLAKE"
       }
-      
+
 }
 
 
 #==============================================================================
 #   Inicializacia kniznice
 #------------------------------------------------------------------------------
-print('SIQO hosts library ver 1.01')
+print(f'hosts.py {_VER}')
 
 #==============================================================================
 #                              END OF FILE
