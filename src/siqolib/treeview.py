@@ -1,14 +1,17 @@
-#==============================================================================
-# Siqo tkInter library
-#------------------------------------------------------------------------------
+"""TreeView widget utilities using tkinter.
 
-import tkinter                as tk
-#from   tkinter                import (ttk, font, scrolledtext, messagebox)
-from   tkinter                import (ttk, font, messagebox)
-from   .logger                 import SiqoLogger
+Provides advanced TreeView functionality for tkinter applications including
+sorting, filtering, and column management.
+"""
+
+import tkinter as tk
+from tkinter import ttk, font, messagebox
+from typing import Optional, Any, List, Dict
+
+from .logger import SiqoLogger
 
 #==============================================================================
-# package's constants
+# Module's constants
 #------------------------------------------------------------------------------
 _VER         = '1.2.4'
 
@@ -23,7 +26,7 @@ _WIDTH_SUM   = 220       # Default sum of max widths of all columns
 _EXTRA_AFTER =  20       # If there is more rows, add extra row because y-scrollbar
 
 #==============================================================================
-# package's variables
+# Module's variables
 #------------------------------------------------------------------------------
 logger = SiqoLogger('treeview')
 
@@ -824,9 +827,9 @@ class SiqoTreeView(tk.Frame):
                 self.rcm.delete(i)
 
 #==============================================================================
-#   Inicializacia kniznice
+# Inicializacia modulu
 #------------------------------------------------------------------------------
-print(f'treeview {_VER}')
+print(f'siqolib.treeview.py ver {_VER}')
 
 #==============================================================================
 #                              END OF FILE

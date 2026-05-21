@@ -1,14 +1,19 @@
 #==============================================================================
-# Siqo common library
+# Siqo common library metaclass SingletonMeta
 #------------------------------------------------------------------------------
+"""Singleton metaclass implementation for SIQO library.
+
+Provides a metaclass for creating singleton objects where only one instance
+of a class can exist throughout the application lifetime.
+"""
 
 #==============================================================================
-# package's constants
+# Module's constants
 #------------------------------------------------------------------------------
 _VER  = '1.0.0'
 
 #==============================================================================
-# package's variables
+# Module's variables
 #------------------------------------------------------------------------------
 
 #==============================================================================
@@ -46,8 +51,10 @@ class SingletonMeta(type):
         #----------------------------------------------------------------------
         return cls._instances[cls]
 
+#==============================================================================
+# Inicializacia modulu
 #------------------------------------------------------------------------------
-print(f'Siqo singleton meta class ver {_VER}')
+print(f'siqolib.singleton.py ver {_VER}')
 
 #==============================================================================
 #                              END OF FILE

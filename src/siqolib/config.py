@@ -1,40 +1,45 @@
 #==============================================================================
-#  SIQO Library: Configuration
+# Siqo common library class Config
 #------------------------------------------------------------------------------
+"""
+Configuration management module for SIQO library.
+
+Provides configuration utilities and constants for SIQO applications.
+"""
+
 import os
+from typing import Final
+
 from .logger import SiqoLogger
 
-logger = SiqoLogger('config')
-
 #==============================================================================
-# package's constants
+# Module's constants
 #------------------------------------------------------------------------------
-_VER      = '1.0.0'
-
-if 'siqo-test' in os.environ: _IS_TEST = True if os.environ['siqo-test']=='1' else False
-else                        : _IS_TEST = False
+_VER: Final[str] = "1.0.0"
+_IS_TEST: Final[bool] = os.environ.get("siqo-test") == "1"
 
 #==============================================================================
-# package's variables
+# Module's variables
 #------------------------------------------------------------------------------
+logger = SiqoLogger('SiqoConfig')
 
 #==============================================================================
-# Config class
+# SiqoConfig
 #------------------------------------------------------------------------------
-class Config:
+class SiqoConfig:
+    """Configuration class for SIQO applications.
 
-    cwd      = os.getcwd()
+    Attributes:
+        cwd (str): Current working directory at module initialization time.
+    """
+
+    cwd: Final[str] = os.getcwd()
 
 
 #==============================================================================
-# Test cases
+# Inicializacia modulu
 #------------------------------------------------------------------------------
-if __name__ == '__main__':
-
-    print(Config.cwd       )
-
-#==============================================================================
-logger.info(f"config: initialized, ver {_VER}")
+print(f'siqolib.config.py ver {_VER}')
 
 #==============================================================================
 #                              END OF FILE

@@ -1,7 +1,11 @@
-#==============================================================================
-# Siqo common library settings
-#------------------------------------------------------------------------------
-_VER = '1.0.1'
+"""Host configuration management for database connections.
+
+Defines host configurations for various database services.
+"""
+
+from typing import Final, Dict, Any
+
+_VER: Final[str] = '1.0.1'
 
 hosts = {
       "ODS": {

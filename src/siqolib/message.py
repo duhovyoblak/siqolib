@@ -1,22 +1,29 @@
 #==============================================================================
-# Siqo tkInter library
+# Siqo common library class SiqoMessage
 #------------------------------------------------------------------------------
-import tkinter                as tk
-from   tkinter                import ttk, scrolledtext,simpledialog , messagebox
-from   .logger                 import SiqoLogger
+"""Message dialog utilities using tkinter.
+
+Provides SiqoMessage class for displaying message dialogs in tkinter applications.
+"""
+
+import tkinter as tk
+from tkinter import ttk, scrolledtext, simpledialog, messagebox
+from typing import Optional, Any
+
+from .logger import SiqoLogger
 
 #==============================================================================
-# package's constants
+# Module's constants
 #------------------------------------------------------------------------------
 _VER   = '1.1.2'
 
 #==============================================================================
-# package's variables
+# Module's variables
 #------------------------------------------------------------------------------
 logger = SiqoLogger('message')
 
 #==============================================================================
-# Class SiqoMessage
+# SiqoMessage
 #------------------------------------------------------------------------------
 class SiqoMessage(tk.Toplevel):
 
@@ -128,7 +135,7 @@ def askReal(container, title="Real number dialog", prompt="Zadaj číslo:", init
             return None
 
 #==============================================================================
-# Class SiqoEntry
+# Typed ask dialogs
 #------------------------------------------------------------------------------
 def getNumber(name, label, entry='', wpix=500, hpix=500, lpix=300, tpix=200):
 
@@ -165,6 +172,8 @@ def getEntry(name, label, entry='', wpix=500, hpix=500, lpix=300, tpix=200):
 
     return entry
 
+#==============================================================================
+# Class SiqoEntry
 #------------------------------------------------------------------------------
 class SiqoEntry(tk.Toplevel):
 
@@ -248,7 +257,7 @@ class SiqoEntry(tk.Toplevel):
         logger.debug(f"tk.{self.name}.entry: done")
 
 #==============================================================================
-# Class SiqoLogin
+# SiqoLogin
 #------------------------------------------------------------------------------
 class SiqoLogin(tk.Toplevel):
 
@@ -350,40 +359,9 @@ class SiqoLogin(tk.Toplevel):
         logger.debug(f"tk.{self.name}.login: done")
 
 #==============================================================================
-#   Inicializacia kniznice
+# Inicializacia modulu
 #------------------------------------------------------------------------------
-print(f'SIQO message library ver {_VER}')
-
-
-if __name__ == "__main__":
-
-
-    msg = SiqoMessage('Test', ['This is a test message.', 'You can add multiple lines.'])
-    msg.mainloop()
-
-    #--------------------------------------------------------------------------
-    # Test of the InfoMarixGui class
-    #--------------------------------------------------------------------------
-    win = tk.Tk()
-    win.configure(bg='silver', highlightthickness=2, highlightcolor='green')
-    win.title('Test of siqo_message class')
-    win.minsize(width=600, height=300)
-    win.config(highlightbackground = "green", highlightcolor= "green")
-
-    #--------------------------------------------------------------------------
-    # Zaciatok testu
-    #--------------------------------------------------------------------------
-    # Pridanie buttonu na vyvolanie askInt
-    def onAskInt():
-        value = askInt(title="Zadaj číslo", prompt="Zadaj celé číslo:", initialvalue=7, min=1, max=10)
-        print(f"Zadané číslo: {value}")
-
-    btn_ask_int = tk.Button(win, text="Zadaj celé číslo", command=onAskInt)
-    btn_ask_int.pack(pady=20)
-
-
-    win.mainloop()
-
+print(f'siqolib.message.py ver {_VER}')
 
 #==============================================================================
 #                              END OF FILE

@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=61.0", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "siqolib"
+description = "General SIQO library"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "Proprietary"}
+authors = [{name = "Pavol Horansky"}]
+keywords = ["siqo"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: Other/Proprietary License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "pytz>=2023.3.post1",
+]
+dynamic = ["version"]
+
+[project.urls]
+Homepage = "https://github.com/duhovyoblak/siqolib"
+Repository = "https://github.com/duhovyoblak/siqolib"
+
+[tool.setuptools]
+packages = ["siqolib"]
+package-dir = {"" = "src"}
+
+[tool.setuptools_scm]
+write_to = ".version"
+write_to_template = "{version}\n"
+fallback_version = "1.3.4"
+local_scheme = "no-local-version"

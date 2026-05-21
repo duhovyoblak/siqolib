@@ -1,16 +1,16 @@
 #==============================================================================
-# Siqo common library
+# Siqo common library class Logger
 #------------------------------------------------------------------------------
 import functools
 import logging
 import inspect
-from   datetime               import datetime
+from   datetime                import datetime
 
 from   .singleton              import SingletonMeta
 from   .general                import TIME_ZONE
 
 #==============================================================================
-# package's constants
+# Module's constants
 #------------------------------------------------------------------------------
 _VER = '1.3.0'
 
@@ -34,7 +34,7 @@ _CUT_LINES               =  9000    # Po presiahnuti _MAX_LINES zostane _CUT_LIN
 _TIME_WARNING            = 20
 
 #==============================================================================
-# package's variables
+# Module's variables
 #------------------------------------------------------------------------------
 _timeStats = {}   # Dict to store time duration for functions {functon_name: [start_time, duration]}
 
@@ -154,7 +154,7 @@ def asyncStopWatch(function):
     return wrapper
 
 #==============================================================================
-# SiqoLogger
+# SiqoFormatter
 #------------------------------------------------------------------------------
 class SiqoFormatter(logging.Formatter):
     "Modify the logging level name length in the format string"
@@ -165,6 +165,8 @@ class SiqoFormatter(logging.Formatter):
             record.levelname = record.levelname[:1]  # Truncate levelname to 1 character
         return super().format(record)
 
+#==============================================================================
+# SiqoLogger
 #------------------------------------------------------------------------------
 class SiqoLogger(metaclass=SingletonMeta):
     "Siqo Logger class"
@@ -436,48 +438,9 @@ class SiqoLogger(metaclass=SingletonMeta):
 #------------------------------------------------------------------------------
 
 #==============================================================================
-# Logger
+# Inicializacia modulu
 #------------------------------------------------------------------------------
-print(f'Siqo Logger ver {_VER}')
-
-#==============================================================================
-# Unit tests
-#------------------------------------------------------------------------------
-if __name__ == "__main__":
-
-    logger1 = SiqoLogger()
-    logger2 = SiqoLogger()
-
-    if id(logger1) == id(logger2): print("Singleton works, both variables contain the same instance.")
-    else                         : print("Singleton failed, variables contain different instances.")
-
-    logger1.setLevel(logging.DEBUG)
-    logger1.debug   ("This is a debug message."   )
-    logger1.info    ("This is an info message."   )
-    logger1.warning ("This is a warning message." )
-    logger1.error   ("This is an error message."  )
-    logger1.critical("This is a critical message.")
-    logger1.audit   ("This is an audit message.")
-    print()
-
-    logger1.frameDepth = 0
-    print(logger1.frameDepth)
-    logger1.debug   ("This is a debug message."   )
-    logger1.frameDepth = 1
-    print(logger1.frameDepth)
-    logger1.info    ("This is an info message."   )
-    logger1.frameDepth = 2
-    print(logger1.frameDepth)
-    logger1.warning ("This is a warning message." )
-    logger1.frameDepth = 3
-    print(logger1.frameDepth)
-    logger1.error   ("This is an error message."  )
-    logger1.frameDepth = 4
-    print(logger1.frameDepth)
-    logger1.critical("This is a critical message.")
-    logger1.frameDepth = 5
-    print(logger1.frameDepth)
-    logger1.audit   ("This is an audit message.")
+print(f'siqolib.logger.py ver {_VER}')
 
 #==============================================================================
 #                              END OF FILE

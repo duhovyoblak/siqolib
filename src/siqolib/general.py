@@ -1,6 +1,12 @@
 #==============================================================================
-# Siqo general library
+# Siqo common library general utilities
 #------------------------------------------------------------------------------
+"""General utilities and helper functions for SIQO library.
+
+Provides date/time conversion, JSON handling, bracket structure parsing,
+and other general utility functions.
+"""
+
 import os
 import pickle
 import json
@@ -8,10 +14,13 @@ import re
 import base64
 import pytz
 import time
-from   datetime        import date, datetime, timedelta
+from datetime import date, datetime, timedelta
+from typing import Any, Optional, Dict, List
+
+from siqolib.logger import SiqoLogger
 
 #==============================================================================
-# package's constants
+# Module's constants
 #------------------------------------------------------------------------------
 _VER      = '1.2.0'
 
@@ -26,8 +35,9 @@ else                      : TIME_ZONE = pytz.timezone('Etc/GMT-1')  # CET zimny 
 TIME_FORMAT = '%Y.%m.%d %H:%M:%S'
 
 #==============================================================================
-# package's variables
+# Module's variables
 #------------------------------------------------------------------------------
+logger = SiqoLogger('SiqoGeneral')
 
 #==============================================================================
 # Datetime tools
@@ -953,30 +963,9 @@ def getPasw(con, user):
     return pasw
 
 #==============================================================================
-#   Inicializacia kniznice
+# Inicializacia modulu
 #------------------------------------------------------------------------------
-print(f'SIQO general library ver {_VER}')
-
-#==============================================================================
-# Unit test of SIQO general library
-#------------------------------------------------------------------------------
-if __name__ == '__main__':
-
-    if True:
-        print(40*'=')
-        print('Datetime tools')
-        print(40*'-')
-        print('dateToTif()                    = ', dateToTif(dat=None)            )
-        print('dateToTif(date.today())        = ', dateToTif(date.today())        )
-
-
-        print('dateToTif(datetime.now())      = ', dateToTif(datetime.now())      )
-        print('dateToTifPart()                = ', dateToTifPart()                )
-        print('tifToDate(19500)               = ', tifToDate(19500)               )
-        print('tifToDate(19500.55)            = ', tifToDate(19500.55)            )
-        print('tifToChar(19500.55)            = ', tifToChar(19500.55)            )
-        print('tifToChar(19500.55, dec=False) = ', tifToChar(19500.55, dec=False) )
-        print()
+print(f'siqolib.general.py ver {_VER}')
 
 #==============================================================================
 #                              END OF FILE

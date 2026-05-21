@@ -1,24 +1,24 @@
 #==============================================================================
-# Class SiqoConnect as an abstract class
+# Siqo common library class SiqoConnect
 #------------------------------------------------------------------------------
+"""Connection management module for SIQO database operations.
+
+Provides abstract connection class and utilities for managing database connections.
+"""
+
 import sys
 import os
 import re
 import pytz
+from datetime import datetime, timedelta
+from typing import Optional, Any, Dict, List
 
-from   datetime      import datetime, timedelta
-from   . import general as gen
-from   .hosts    import hosts
-from   .logger       import SiqoLogger
-
-logger = SiqoLogger('connect')
-
-env = 'localPython'
-hst = 'PC'
-
+from . import general as gen
+from .hosts import hosts
+from .logger import SiqoLogger
 
 #==============================================================================
-# package's constants
+# Module's constants
 #------------------------------------------------------------------------------
 _VER          = '1.0.1'
 #------------------------------------------------------------------------------
@@ -32,8 +32,12 @@ _PING_LAG     = 10                     # Pocet hodin do najblizsieho ping-u
 _QRY_SAMPLE   = 60                     # Dlzka QRY na zobrazenie
 
 #==============================================================================
-# package's variables
+# Module's variables
 #------------------------------------------------------------------------------
+logger = SiqoLogger('SiqoConnect')
+
+env = 'localPython'
+hst = 'PC'
 
 #==============================================================================
 # SiqoConnect
@@ -307,11 +311,10 @@ class SiqoConnect:
 
         logger.warning(f'connect.kinit: This is abstract method only. Force = {force}')
 
-
 #==============================================================================
-#   Inicializacia kniznice
+# Inicializacia modulu
 #------------------------------------------------------------------------------
-logger.info(f'connect: SiqoConnect library initialized, ver {_VER}')
+print(f'siqolib.connect.py ver {_VER}')
 
 #==============================================================================
 #                              END OF FILE
