@@ -5,12 +5,12 @@
 import tkinter                as tk
 #from   tkinter                import (ttk, font, scrolledtext, messagebox)
 from   tkinter                import (ttk, font, messagebox)
-from   logger                 import SiqoLogger
+from   .logger                 import SiqoLogger
 
 #==============================================================================
 # package's constants
 #------------------------------------------------------------------------------
-_VER         = '1.2.3'
+_VER         = '1.2.4'
 
 _ASC         = 'ᐃ'       # Sorted ascending sign
 _DSC         = '▼'       # Sorted descending sign
@@ -826,7 +826,7 @@ class SiqoTreeView(tk.Frame):
 #==============================================================================
 #   Inicializacia kniznice
 #------------------------------------------------------------------------------
-print(f'SIQO TreeView library ver {_VER}')
+print(f'treeview {_VER}')
 
 #==============================================================================
 #                              END OF FILE

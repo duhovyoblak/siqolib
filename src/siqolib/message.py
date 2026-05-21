@@ -3,7 +3,7 @@
 #------------------------------------------------------------------------------
 import tkinter                as tk
 from   tkinter                import ttk, scrolledtext,simpledialog , messagebox
-from   logger                 import SiqoLogger
+from   .logger                 import SiqoLogger
 
 #==============================================================================
 # package's constants

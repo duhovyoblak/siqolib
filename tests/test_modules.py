@@ -16,7 +16,6 @@ MODULES = [
     'siqolib.connect',
     'siqolib.general',
     'siqolib.hosts',
-    'siqolib.journal',
     'siqolib.logger',
     'siqolib.message',
     'siqolib.singleton',

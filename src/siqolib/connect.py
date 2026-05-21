@@ -7,7 +7,11 @@ import re
 import pytz
 
 from   datetime      import datetime, timedelta
-from   siqo_hosts    import hosts
+from   . import general as gen
+from   .hosts    import hosts
+from   .logger       import SiqoLogger
+
+logger = SiqoLogger('connect')
 
 env = 'localPython'
 hst = 'PC'
@@ -16,9 +20,13 @@ hst = 'PC'
 #==============================================================================
 # package's constants
 #------------------------------------------------------------------------------
-_VER          = '1.0.0'
+_VER          = '1.0.1'
 #------------------------------------------------------------------------------
-_TIME_ZONE    = pytz.timezone('CET')   # Timezone in which Journal runs
+_AUTH         = 'AUTH'                 # Authentication connection name
+_NOPAS        = '***'                  # Placeholder for no password
+CONNECTS_CONF = 'connects.conf'        # Configuration file name
+#------------------------------------------------------------------------------
+_TIME_ZONE    = pytz.timezone('CET')   # Timezone for connections
 _TIME_WATCH   = 5                      # Logovanie prikazov trvajucich viac sekund
 _PING_LAG     = 10                     # Pocet hodin do najblizsieho ping-u
 _QRY_SAMPLE   = 60                     # Dlzka QRY na zobrazenie
@@ -73,16 +81,16 @@ class SiqoConnect:
 
     #--------------------------------------------------------------------------
     @staticmethod
-    def initConnect(journal, srvId, con, who, pasw=None):
+    def initConnect(srvId, con, who, pasw=None):
         "Creates and initialises <con> connection. Returns conObj"
 
         #----------------------------------------------------------------------
         # Nacitam konfiguraciu konekcie
         #----------------------------------------------------------------------
-        SiqoConnect.loadConf(journal)
+        SiqoConnect.loadConf()
 
         if con not in SiqoConnect.conf.keys():
-            journal.M(f'{con}.initConnect: Connection {con} does not exists in configuration file', True)
+            logger.error(f'connect.initConnect: Connection {con} does not exists in configuration file')
             return None
 
         #----------------------------------------------------------------------
@@ -91,7 +99,7 @@ class SiqoConnect:
         conf = SiqoConnect.conf[con]
 
         if conf['func']!='Y':
-            journal.M(f'{con}.initConnect: Connection {con} is not active', True)
+            logger.error(f'connect.initConnect: Connection {con} is not active')
             return None
 
         #----------------------------------------------------------------------
@@ -99,7 +107,7 @@ class SiqoConnect:
         #----------------------------------------------------------------------
         user = conf['user']
 
-        if pasw is None: pasw = gen.getPasw(journal, con, user)
+        if pasw is None: pasw = gen.getPasw(con, user)
         if pasw is None: pasw = _NOPAS
 
         #----------------------------------------------------------------------
@@ -110,63 +118,58 @@ class SiqoConnect:
         #----------------------------------------------------------------------
         # Vytvorim instanciu konekcie
         #----------------------------------------------------------------------
-        journal.I(f"{con}.initConnect: For user '{user}'/'{who}'")
+        logger.info(f"connect.initConnect: For user '{user}'/'{who}'")
 
         if   conf['type'] == 'oracle':
 
             if env == 'docker': from   .SiqoConnect_oracle  import SiqoConnect_oracle
-            else              : from   SiqoConnect_oracle   import SiqoConnect_oracle
+            else              : from   .SiqoConnect_oracle  import SiqoConnect_oracle
 
-            try: conObj = SiqoConnect_oracle(journal, srvId, con, conf, who, pasw)
+            try: conObj = SiqoConnect_oracle(srvId, con, conf, who, pasw)
             except Exception as err:
-                journal.M(f'{con}.oracle.initConnect: ERROR {err}', True)
-                journal.O('')
+                logger.error(f'connect.oracle.initConnect: ERROR {err}')
                 return None
 
         elif conf['type'] == 'python':
 
             if env == 'docker': from   .SiqoConnect_python  import SiqoConnect_python
-            else              : from   SiqoConnect_python   import SiqoConnect_python
+            else              : from   .SiqoConnect_python  import SiqoConnect_python
 
-            try: conObj = SiqoConnect_python(journal, srvId, con, conf, who, pasw)
+            try: conObj = SiqoConnect_python(srvId, con, conf, who, pasw)
             except Exception as err:
-                journal.M(f'{con}.python.initConnect: ERROR {err}', True)
-                journal.O('')
+                logger.error(f'connect.python.initConnect: ERROR {err}')
                 return None
 
         elif conf['type'] == 'impala':
 
             if env == 'docker': from   .SiqoConnect_impala  import SiqoConnect_impala
-            else              : from   SiqoConnect_impala   import SiqoConnect_impala
+            else              : from   .SiqoConnect_impala  import SiqoConnect_impala
 
-            try: conObj = SiqoConnect_impala(journal, srvId, con, conf, who, pasw)
+            try: conObj = SiqoConnect_impala(srvId, con, conf, who, pasw)
             except Exception as err:
-                journal.M(f'{con}.impala.initConnect: ERROR {err}', True)
-                journal.O('')
+                logger.error(f'connect.impala.initConnect: ERROR {err}')
                 return None
 
         else:
-            journal.M('{}.initConnect: ERROR - {} is unknown connection type of {}'.format('SiqoConnect.initconnects', con, conf['type']), True)
-            journal.O('')
+            logger.error(f'connect.initConnect: ERROR - {con} is unknown connection type of {conf["type"]}')
             return None
 
         #----------------------------------------------------------------------
-        journal.O('')
+        logger.info('connect.initConnect: done')
         return conObj
 
     #--------------------------------------------------------------------------
     @staticmethod
-    def delConnect(journal, srvId, con):
+    def delConnect(srvId, con):
         "Removes conObj for respective con from cons and deletes conObj"
 
-        journal.I(f'SiqoConnect.delConnect: {srvId}.{con}')
+        logger.info(f'connect.delConnect: {srvId}.{con}')
 
         #----------------------------------------------------------------------
         # Kontrola pred zmazanim konekcie
         #----------------------------------------------------------------------
         if SiqoConnect.getConnect(srvId, con) is None:
-            journal.M(f'SiqoConnect.delConnect: Service {srvId}.{con} does not exist, command is denied', True)
-            journal.O('')
+            logger.error(f'connect.delConnect: Service {srvId}.{con} does not exist, command is denied')
             return {'res':'ER', 'msg':[f'Service {srvId}.{con} does not exist. Command denied'], 'dat':{}, 'obj':None}
 
         else:
@@ -176,36 +179,35 @@ class SiqoConnect:
             conToDel = SiqoConnect.cons.pop(f'{srvId}.{con}')
             if conToDel is not None: del conToDel
 
-            journal.O(f'SiqoConnect.delConnect: Service {srvId}.{con} was deleted')
+            logger.info(f'connect.delConnect: Service {srvId}.{con} was deleted')
             return {'res':'OK', 'msg':[f'Connection {srvId}.{con} was deleted'], 'dat':{}, 'obj':None}
 
     #--------------------------------------------------------------------------
     @staticmethod
-    def saveConf(journal):
+    def saveConf():
         "Saves current connects configuration"
 
-        journal.I('{}.saveConf'.format('SiqoConnect'))
-        gen.dumpJson(journal, CONNECTS_CONF, SiqoConnect.conf)
-        journal.O('')
+        logger.info('connect.saveConf: saving connections configuration')
+        gen.dumpJson(CONNECTS_CONF, SiqoConnect.conf)
+        logger.info('connect.saveConf: done')
 
     #--------------------------------------------------------------------------
     @staticmethod
-    def loadConf(journal):
+    def loadConf():
         "Loads current connects configuration"
 
-        journal.I('{}.loadConf'.format('SiqoConnect'))
-        SiqoConnect.conf = gen.loadJson(journal, CONNECTS_CONF)
-        journal.O('')
+        logger.info('connect.loadConf: loading connections configuration')
+        SiqoConnect.conf = gen.loadJson(CONNECTS_CONF)
+        logger.info('connect.loadConf: done')
 
     #==========================================================================
     # Constructor & utilities
     #--------------------------------------------------------------------------
-    def __init__(self, journal, name, notes=''):
+    def __init__(self, name, notes=''):
         """Call constructor of SiqoConnect and initialise it"""
 
-        journal.I(f'SiqoConnect.init:{name}')
+        logger.info(f'connect.init: {name}')
 
-        self.journal     = journal      # Odkaz na globalny journal
         self.name        = name         # Nazov konekcie
         self.notes       = notes        # Poznamky ku konekcii
 
@@ -224,7 +226,7 @@ class SiqoConnect:
         self.lastPing    = None         # Time of last ping
         self.lastKinit   = None         # Time of last kinit
 
-        self.journal.O(f'{self.name}.init: done')
+        logger.info(f'connect.init: {self.name} done')
 
     #==========================================================================
     # API for users
@@ -277,39 +279,39 @@ class SiqoConnect:
     def openConn(self, pasw):
         "Opens connection"
 
-        self.journal.M('{}.openConn: This is abstract method only. You should use inherited object'.format(self.con), True)
+        logger.error('connect.openConn: This is abstract method only. You should use inherited object')
         return { 'dbServ':self.host, 'dbServId':-1, 'eng':None, 'cur':None}
 
     #--------------------------------------------------------------------------
     def commitConn(self):
         "Commits open transaction"
 
-        self.journal.M('{}.commitConn: This is abstract method only. You should use inherited object'.format(self.con), True)
+        logger.error('connect.commitConn: This is abstract method only. You should use inherited object')
 
     #--------------------------------------------------------------------------
     def closeConn(self):
         "Close opened session/connection"
 
-        self.journal.M('{}.closeConn: This is abstract method only. You should use inherited object'.format(self.con), True)
+        logger.error('connect.closeConn: This is abstract method only. You should use inherited object')
 
     #--------------------------------------------------------------------------
     def ping(self, who, force=False):
         "Ping this connection. Returns true if succeed"
 
-        self.journal.M('{}.ping: This is abstract method only. You should use inherited object. Force = {}'.format(self.con, force))
+        logger.warning(f'connect.ping: This is abstract method only. Force = {force}')
         return self.initialised
 
     #--------------------------------------------------------------------------
     def kinit(self, who, force=False):
         "Kinit/refresh ticket this connection."
 
-        self.journal.M('{}.kinit: This is abstract method only. You should use inherited object. Force = {}'.format(self.con, force))
+        logger.warning(f'connect.kinit: This is abstract method only. Force = {force}')
 
 
 #==============================================================================
 #   Inicializacia kniznice
 #------------------------------------------------------------------------------
-print(f'SiqoConnect {_VER}')
+logger.info(f'connect: SiqoConnect library initialized, ver {_VER}')
 
 #==============================================================================
 #                              END OF FILE

@@ -2,6 +2,7 @@
 #  SIQO library: Initialization
 #------------------------------------------------------------------------------
 import os
+from .logger import SiqoLogger
 
 
 #==============================================================================
@@ -30,10 +31,12 @@ _CWD      = os.getcwd()
 # Main
 if __name__ =='__main__':
 
-    pass
+    logger = SiqoLogger('siqolib.__init__')
+    logger.info('__init__: siqolib package initialized, ver {_VER}')
 
 #==============================================================================
-print(f"siqolib.__init__ {_VER} at {_CWD}")
+logger = SiqoLogger('siqolib')
+logger.info(f'__init__: siqolib package initialized, ver {_VER}')
 
 #==============================================================================
 #                              END OF FILE

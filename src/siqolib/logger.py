@@ -6,8 +6,8 @@ import logging
 import inspect
 from   datetime               import datetime
 
-from  singleton          import SingletonMeta
-from  general            import TIME_ZONE
+from   .singleton              import SingletonMeta
+from   .general                import TIME_ZONE
 
 #==============================================================================
 # package's constants

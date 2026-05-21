@@ -3,7 +3,7 @@
 #------------------------------------------------------------------------------
 import os
 
-from   siqolib.journal     import SiqoJournal
+from   siqolib.logger      import SiqoLogger
 
 #==============================================================================
 # Setting the environment
@@ -15,7 +15,7 @@ os.environ['siqo-test'] = '1'
 #==============================================================================
 # package's constants & private vars
 #------------------------------------------------------------------------------
-_VER      = '1.00'
+_VER      = '1.01'
 _CWD      = os.getcwd()
 
 
@@ -29,12 +29,12 @@ _CWD      = os.getcwd()
 # Main
 if __name__ =='__main__':
 
-    journal = SiqoJournal('siqolib', debug=2)
-    journal.I( 'siqolib init' )
-    
-    
-    
-    journal.O()
+    logger = SiqoLogger('siqolib')
+    logger.info('main: siqolib init')
+
+
+
+    logger.info('main: siqolib done')
 
 #==============================================================================
 print(f"siqolib.main {_VER} at {_CWD}")

@@ -2,6 +2,9 @@
 #  SIQO Library: Configuration
 #------------------------------------------------------------------------------
 import os
+from .logger import SiqoLogger
+
+logger = SiqoLogger('config')
 
 #==============================================================================
 # package's constants
@@ -31,7 +34,7 @@ if __name__ == '__main__':
     print(Config.cwd       )
 
 #==============================================================================
-print(f"config.py {_VER}")
+logger.info(f"config: initialized, ver {_VER}")
 
 #==============================================================================
 #                              END OF FILE
