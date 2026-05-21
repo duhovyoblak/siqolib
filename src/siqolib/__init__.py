@@ -1,3 +1,6 @@
+#==============================================================================
+# Siqo common library siqolib package initialization
+#------------------------------------------------------------------------------
 """
 SIQO Library - General utilities and tools for SIQO projects.
 
@@ -13,9 +16,14 @@ Version: 1.3.4
 Author: Pavol Horansky
 License: Proprietary
 """
+import os
+from .logger import SiqoLogger
 
+#==============================================================================
+# Package's constants
+#------------------------------------------------------------------------------
 __version__ = "1.3.4"
-__author__ = "Pavol Horansky"
+__author__  = "Pavol Horansky"
 __license__ = "Proprietary"
 __all__ = [
     "SiqoLogger",
@@ -28,13 +36,16 @@ __all__ = [
     "treeview",
 ]
 
-import os
-from .logger import SiqoLogger
+#==============================================================================
+# Module's variables
+#------------------------------------------------------------------------------
+logger = SiqoLogger("siqolib")
 
-# Package constants & private vars
-_VER = "1.0.0"
-_CWD = os.getcwd()
+#==============================================================================
+# Inicializacia package
+#------------------------------------------------------------------------------
+print(f'siqolib.__init__.py ver {__version__}')
 
-# Initialize package logger
-_logger = SiqoLogger("siqolib")
-_logger.info(f"siqolib package initialized, version {__version__}")
+#==============================================================================
+#                              END OF FILE
+#------------------------------------------------------------------------------

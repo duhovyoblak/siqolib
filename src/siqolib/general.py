@@ -17,8 +17,6 @@ import time
 from datetime import date, datetime, timedelta
 from typing import Any, Optional, Dict, List
 
-from siqolib.logger import SiqoLogger
-
 #==============================================================================
 # Module's constants
 #------------------------------------------------------------------------------
@@ -37,7 +35,6 @@ TIME_FORMAT = '%Y.%m.%d %H:%M:%S'
 #==============================================================================
 # Module's variables
 #------------------------------------------------------------------------------
-logger = SiqoLogger('SiqoGeneral')
 
 #==============================================================================
 # Datetime tools
