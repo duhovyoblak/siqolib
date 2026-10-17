@@ -8,7 +8,7 @@ import tkinter as tk
 from tkinter import ttk, font, messagebox
 from typing import Optional, Any, List, Dict
 
-from .logger import SiqoLogger
+from . import logger
 
 #==============================================================================
 # Module's constants
@@ -28,8 +28,6 @@ _EXTRA_AFTER =  20       # If there is more rows, add extra row because y-scroll
 #==============================================================================
 # Module's variables
 #------------------------------------------------------------------------------
-logger = SiqoLogger('treeview')
-
 #==============================================================================
 # Class SiqoTreeView
 #------------------------------------------------------------------------------

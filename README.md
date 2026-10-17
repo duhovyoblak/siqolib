@@ -57,8 +57,9 @@ config = SiqoConfig()
 ```
 d:\GitHub\siqolib/
 ├── src/
-│   ├── main.py                              # Application entry point
-│   └── siqolib/                             # Main package
+│   └── main.py                              # Manual test entry point
+├── packages/
+│   └── siqolib/                             # Main Python package
 │       ├── __init__.py                      # Package initialization (v1.3.4)
 │       ├── config.py                        # Configuration management
 │       ├── connect.py                       # Connection management

@@ -30,7 +30,7 @@
             "args": [
                 "tests",
                 "-v",
-                "--cov=src/siqolib",
+                "--cov=packages/siqolib",
                 "--cov-report=html",
                 "--cov-report=term"
             ],

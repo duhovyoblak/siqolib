@@ -32,7 +32,7 @@ Repository = "https://github.com/duhovyoblak/siqolib"
 
 [tool.setuptools]
 packages = ["siqolib"]
-package-dir = {"" = "src"}
+package-dir = {"" = "packages"}
 
 [tool.setuptools_scm]
 write_to = ".version"

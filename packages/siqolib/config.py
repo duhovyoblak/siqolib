@@ -10,7 +10,7 @@ Provides configuration utilities and constants for SIQO applications.
 import os
 from typing import Final
 
-from .logger import SiqoLogger
+from . import logger
 
 #==============================================================================
 # Module's constants
@@ -21,8 +21,6 @@ _IS_TEST: Final[bool] = os.environ.get("siqo-test") == "1"
 #==============================================================================
 # Module's variables
 #------------------------------------------------------------------------------
-logger = SiqoLogger('SiqoConfig')
-
 #==============================================================================
 # SiqoConfig
 #------------------------------------------------------------------------------

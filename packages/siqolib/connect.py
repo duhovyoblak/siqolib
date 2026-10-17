@@ -14,8 +14,8 @@ from datetime import datetime, timedelta
 from typing import Optional, Any, Dict, List
 
 from . import general as gen
+from . import logger
 from .hosts import hosts
-from .logger import SiqoLogger
 
 #==============================================================================
 # Module's constants
@@ -34,8 +34,6 @@ _QRY_SAMPLE   = 60                     # Dlzka QRY na zobrazenie
 #==============================================================================
 # Module's variables
 #------------------------------------------------------------------------------
-logger = SiqoLogger('SiqoConnect')
-
 env = 'localPython'
 hst = 'PC'
 

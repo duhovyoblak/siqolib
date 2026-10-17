@@ -23,6 +23,7 @@ from .logger import SiqoLogger
 # Package's constants
 #------------------------------------------------------------------------------
 __version__ = "1.3.4"
+_VER       = __version__
 __author__  = "Pavol Horansky"
 __license__ = "Proprietary"
 __all__ = [

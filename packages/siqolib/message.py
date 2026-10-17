@@ -10,18 +10,16 @@ import tkinter as tk
 from tkinter import ttk, scrolledtext, simpledialog, messagebox
 from typing import Optional, Any
 
-from .logger import SiqoLogger
+from . import logger
 
 #==============================================================================
 # Module's constants
 #------------------------------------------------------------------------------
-_VER   = '1.1.2'
+_VER   = '1.1.3'
 
 #==============================================================================
 # Module's variables
 #------------------------------------------------------------------------------
-logger = SiqoLogger('message')
-
 #==============================================================================
 # SiqoMessage
 #------------------------------------------------------------------------------
@@ -133,6 +131,57 @@ def askReal(container, title="Real number dialog", prompt="Zadaj číslo:", init
         except ValueError:
             messagebox.showerror("Chyba", "Zadaj platné číslo!", parent=container)
             return None
+
+#------------------------------------------------------------------------------
+def askOption(container, title="Option dialog", prompt="Zadaj možnosť:", options=None, initialvalue=None):
+
+    if options is None:
+        logger.error("askOption: 'options' parameter is None")
+        return None
+
+    options = list(options)
+    if not options:
+        logger.error("askOption: 'options' parameter is empty")
+        return None
+
+    #--------------------------------------------------------------------------
+    # Modalny dialog s Combobox-om, vysledok vracia None pri Cancel
+    #--------------------------------------------------------------------------
+    result = {'value': None}
+
+    dlg = tk.Toplevel(container)
+    dlg.title(title)
+    dlg.resizable(False, False)
+    if container is not None: dlg.transient(container.winfo_toplevel())
+
+    ttk.Label(dlg, text=prompt).pack(anchor=tk.W, padx=10, pady=(10, 5))
+
+    var = tk.StringVar(value=str(initialvalue) if initialvalue in options else str(options[0]))
+    cmb = ttk.Combobox(dlg, textvariable=var, values=options, state='readonly', width=max(20, *(len(str(o)) for o in options)))
+    cmb.pack(fill=tk.X, padx=10, pady=5)
+    cmb.focus_set()
+
+    def _ok(event=None):
+        idx = cmb.current()
+        result['value'] = options[idx] if idx >= 0 else var.get()
+        dlg.destroy()
+
+    def _cancel(event=None):
+        dlg.destroy()
+
+    frm = ttk.Frame(dlg)
+    frm.pack(fill=tk.X, padx=10, pady=10)
+    ttk.Button(frm, text="OK",     command=_ok    ).pack(side=tk.RIGHT, padx=(5, 0))
+    ttk.Button(frm, text="Cancel", command=_cancel).pack(side=tk.RIGHT)
+
+    dlg.bind('<Return>', _ok)
+    dlg.bind('<Escape>', _cancel)
+    dlg.protocol("WM_DELETE_WINDOW", _cancel)
+
+    dlg.grab_set()
+    dlg.wait_window(dlg)
+
+    return result['value']
 
 #==============================================================================
 # Typed ask dialogs
